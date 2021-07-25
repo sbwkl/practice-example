@@ -8,11 +8,9 @@
 #include <errno.h>
 #include <fcntl.h>
 
-static char *quick_reply[16] = {
-  "Hello world!",
-  "mdzz",
-  "fuck",
-  "SB"
+static char *settings[2] = {
+  "手持两把锟斤拷",
+  "口中疾呼烫烫烫"
 };
 
 int main(int argc, char **argv) {
@@ -22,20 +20,21 @@ int main(int argc, char **argv) {
   int readfd = open(serverfifo, O_RDONLY);
   // exec when client come.
   open(serverfifo, O_WRONLY);
-  char buff[1024]; 
+
+  char buff[4096]; 
   int n;
-  while((n = read(readfd, buff, 1024)) > 0) {
+  while((n = read(readfd, buff, 4096)) > 0) {
     buff[n] = '\0';
     int idx = atoi(strchr(buff, ',') + 1);
     char *pid = strtok(buff, ",");
 
-    char clientpath[1024];
-    snprintf(clientpath, 1024, "/tmp/fifo/%s.fifo", pid);
+    char clientpath[4096];
+    snprintf(clientpath, 4096, "/tmp/fifo/%s.fifo", pid);
     int writefd = open(clientpath, O_WRONLY);
-    if (idx > -1 && idx < 4) {
-      write(writefd, quick_reply[idx], strlen(quick_reply[idx]));
+    if (idx > 0 && idx < 3) {
+      write(writefd, settings[idx - 1], strlen(settings[idx - 1]));
     } else {
-      write(writefd, "no such reply", 13);
+      write(writefd, "index out of range.", 19);
     }
     close(writefd);
   }
