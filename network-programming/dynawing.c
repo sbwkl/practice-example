@@ -10,5 +10,5 @@ int main(int argc, char **argv) {
       }
       printf("%s\n", msg);
   }
-  printf("print two\n");
+  printf("dynawing\n");
 }
