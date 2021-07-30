@@ -13,6 +13,8 @@ static char *settings[2] = {
   "口中疾呼烫烫烫"
 };
 
+void exectask(char *buff);
+
 int main(int argc, char **argv) {
   char *serverfifo = "/tmp/fifo/qrs.fifo";
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
@@ -25,6 +27,12 @@ int main(int argc, char **argv) {
   int n;
   while((n = read(readfd, buff, 4096)) > 0) {
     buff[n] = '\0';
+    exectask(buff);
+  }
+  exit(0);
+}
+
+void exectask(char *buff) {
     int idx = atoi(strchr(buff, ',') + 1);
     char *pid = strtok(buff, ",");
 
@@ -37,6 +45,4 @@ int main(int argc, char **argv) {
       write(writefd, "index out of range.", 19);
     }
     close(writefd);
-  }
-  exit(0);
 }

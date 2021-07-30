@@ -21,6 +21,8 @@ void reap_child(int sig) {
   return ;
 }
 
+void exectask(char *buff);
+
 int main(int argc, char **argv) {
 
   signal(SIGCHLD, reap_child);
@@ -36,21 +38,25 @@ int main(int argc, char **argv) {
   int n;
   while((n = read(readfd, buff, 4096)) > 0) {
     buff[n] = '\0';
-    int idx = atoi(strchr(buff, ',') + 1);
-    char *pid = strtok(buff, ",");
-
     if (fork() == 0) {
-      char clientpath[4096];
-      snprintf(clientpath, 4096, "/tmp/fifo/%s.fifo", pid);
-      int writefd = open(clientpath, O_WRONLY);
-      if (idx > 0 && idx < 3) {
-        write(writefd, settings[idx - 1], strlen(settings[idx - 1]));
-      } else {
-        write(writefd, "index out of range.", 19);
-      }
-      close(writefd);
+      exectask(buff);
       exit(0);
     }
   }
   exit(0);
+}
+
+void exectask(char *buff) {
+    int idx = atoi(strchr(buff, ',') + 1);
+    char *pid = strtok(buff, ",");
+
+    char clientpath[4096];
+    snprintf(clientpath, 4096, "/tmp/fifo/%s.fifo", pid);
+    int writefd = open(clientpath, O_WRONLY);
+    if (idx > 0 && idx < 3) {
+      write(writefd, settings[idx - 1], strlen(settings[idx - 1]));
+    } else {
+      write(writefd, "index out of range.", 19);
+    }
+    close(writefd);
 }
