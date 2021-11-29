@@ -10,19 +10,19 @@ class Index {
         });
         try {
             const page = await browser.newPage();
-            // await page.goto('https://console.authing.cn/login');
-            // await page.waitForSelector('button[type="button"]', {
-            //     timeout: 5000
-            // })
-            // await page.click('div.styles_authing-tabs-inner__KEW7v div');
-            // await page.waitForSelector('#identity', {
-            //     timeout: 3000
-            // })
-            // await page.type('#identity', 'zhangsan');
-            // await page.type('#password', 'password');
-            // await page.click('button[type="button"]');
+            await page.goto('https://console.authing.cn/login');
+            await page.waitForSelector('button[type="button"]', {
+                timeout: 5000
+            })
+            await page.click('div.styles_authing-tabs-inner__KEW7v div');
+            await page.waitForSelector('#identity', {
+                timeout: 3000
+            })
+            await page.type('#identity', 'zhangsan');
+            await page.type('#password', 'password');
+            await page.click('button[type="button"]');
             
-            // await page.waitForTimeout(5000);
+            await page.waitForTimeout(5000);
 
             await page.goto('https://007.qq.com/online.html');
             await page.waitForSelector('#code');
