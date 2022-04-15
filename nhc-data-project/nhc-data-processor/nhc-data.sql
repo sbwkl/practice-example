@@ -1,0 +1,1 @@
+CREATE TABLE yqtb_data (id INTEGER PRIMARY KEY, gmt_date INTEGER, source text, province text, city text, diagnosed_cnt INTEGER, carrier_cnt INTEGER);
