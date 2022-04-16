@@ -10,8 +10,8 @@
       "typescript": "3.3.3333"
    },
    "dependencies": {
-      "puppeteer": "^11.0.0",
       "node-fetch": "^2.6.6",
+      "puppeteer": "^13.5.2",
       "python-shell": "^3.0.1"
    },
    "scripts": {

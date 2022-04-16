@@ -9,21 +9,21 @@ class NhcYqtbHomePage {
         });
         try {
             const page = await browser.newPage();
-            await page.goto('http://nhc.gov.cn/xcs/yqtb/list_gzbd.shtml');
+            await page.goto('http://www.nhc.gov.cn/xcs/yqtb/list_gzbd.shtml');
             await page.waitForSelector('div.list')
 
             let liList = await page.$$('li')
             for (let li of liList) {
-                let href = await li.$eval('a', el => el.href)
-                let title = await li.$eval('a', el => el.title)
-                let date = await li.$eval('span', el => el.innerText)
-                console.log(href)
-                console.log(title)
-                console.log(date)
+                let href = await li.$eval('a', el => el.getAttribute('href'));
+                let title = await li.$eval('a', el => el.getAttribute('title'));
+                let date = await li.$eval('span', el => el.getAttribute('innerText'));
+                console.log(href);
+                console.log(title);
+                console.log(date);
             }
 
         } finally {
-            await browser.close();
+            // await browser.close();
         }
     }
 }
