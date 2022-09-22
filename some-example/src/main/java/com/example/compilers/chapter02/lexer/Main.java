@@ -6,7 +6,9 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         Lexer lexer = new Lexer();
-        Token token = lexer.scan();
-        System.out.println(token);
+        while (true) {
+            Token token = lexer.scan();
+            System.out.println(token);
+        }
     }
 }
