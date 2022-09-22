@@ -7,4 +7,9 @@ public class Num extends Token {
         super(Tag.NUM);
         this.value = v;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Num{value = %s, tag = %s}", value, super.tag);
+    }
 }

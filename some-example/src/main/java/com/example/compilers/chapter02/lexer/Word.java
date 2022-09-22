@@ -7,4 +7,9 @@ public class Word extends Token {
         super(t);
         this.lexeme = s;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Word{lexeme = %s, tag = %s}", lexeme, super.tag);
+    }
 }
