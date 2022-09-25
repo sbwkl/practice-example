@@ -1,9 +1,7 @@
 package com.example.compilers.chapter02.lexer;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 public class Lexer {
@@ -28,8 +26,11 @@ public class Lexer {
                     // comment
                     do {
                         c = buffer.peek();
-                    } while (c != '\t')
+                    } while (c != '\n');
+                    String content = buffer.bufferContent();
+                    System.out.printf("comment: %s", peek + content);
                     buffer.clear();
+                    peek = ' ';
                     continue;
                 } else {
                     buffer.reset();
