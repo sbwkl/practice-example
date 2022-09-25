@@ -32,6 +32,17 @@ public class Lexer {
                     buffer.clear();
                     peek = ' ';
                     continue;
+                } else if (c == '*') {
+                    // comment
+                    char p1, p2 = ' ';
+                    do {
+                        p1 = p2;
+                        p2 = buffer.peek();
+                    } while (!(p1 == '*' && p2 == '/'));
+                    String content = buffer.bufferContent();
+                    buffer.clear();
+                    peek = '';
+                    continue;
                 } else {
                     buffer.reset();
                     peek = buffer.pop();
