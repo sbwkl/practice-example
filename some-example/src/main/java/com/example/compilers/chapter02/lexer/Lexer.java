@@ -9,8 +9,7 @@ import java.util.Map;
 public class Lexer {
     public int line = 1;
     private char peek = ' ';
-    List<Character> buffer = new ArrayList<>();
-    private int bufferIndex = 0;
+    Buffer buffer = new Buffer();
     private Map<String, Token> words = new Hashtable<>();
     void reserve(Word w) {
         words.put(w.lexeme, w);
@@ -20,11 +19,22 @@ public class Lexer {
         reserve(new Word(Tag.FALSE, "false"));
     }
     public Token scan() throws IOException {
-        for (; ; peek = nextCharacter()) {
+        for (; ; peek = buffer.pop()) {
             if (peek == ' ' || peek == '\t') continue;
             else if (peek == '\n') line += 1;
             else if (peek == '/') {
-                buffer.add(peek);
+                char c = buffer.peek();
+                if (c == '/') {
+                    // comment
+                    do {
+                        c = buffer.peek();
+                    } while (c != '\t')
+                    buffer.clear();
+                    continue;
+                } else {
+                    buffer.reset();
+                    peek = buffer.pop();
+                }
             }
             else break;
         }
@@ -32,7 +42,7 @@ public class Lexer {
             int v = 0;
             do {
                 v = 10 * v + Character.digit(peek, 10);
-                peek = nextCharacter();
+                peek = buffer.pop();
             } while (Character.isDigit(peek));
             return new Num(v);
         }
@@ -40,7 +50,7 @@ public class Lexer {
             StringBuffer b = new StringBuffer();
             do {
                 b.append(peek);
-                peek = nextCharacter();
+                peek = buffer.pop();
             } while (Character.isLetterOrDigit(peek));
             String s = b.toString();
             Word w = (Word) words.get(s);
@@ -53,12 +63,4 @@ public class Lexer {
         peek = ' ';
         return t;
     }
-
-    private char nextCharacter() throws IOException {
-        if (buffer.isEmpty()) {
-            buffer.add((char) System.in.read());
-        }
-        return buffer.get(0);
-    }
-
 }
