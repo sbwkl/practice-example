@@ -71,6 +71,32 @@ public class Lexer {
             words.put(s, w);
             return w;
         }
+        if (peek == '<') {
+            char c = buffer.peek();
+            if (c == '=') {
+                // <= Token
+                Op t = new Op(Tag.LE, peek + c);
+                return t;
+            } else {
+                buffer.resetIndex();
+            }
+        }
+        if (peek = '!') {
+            char c = buffer.peek();
+            if (c == '=') {
+                // !=
+            } else {
+                buffer.resetIndex();
+            }
+        }
+        if (peek = '>') {
+            char c = buffer.peek();
+            if (c == '=') {
+                // >=
+            } else {
+                buffer.resetIndex();
+            }
+        }
         Token t = new Token(peek);
         peek = ' ';
         return t;
