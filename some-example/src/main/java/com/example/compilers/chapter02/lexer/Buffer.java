@@ -31,7 +31,7 @@ public class Buffer {
         return t;
     }
 
-    public void reset() {
+    public void resetIndex() {
         index = first;
     }
 
@@ -41,7 +41,7 @@ public class Buffer {
         index = 0;
     }
 
-    public String bufferContent() {
+    public String content() {
         StringBuffer sb = new StringBuffer();
         for (int i = first; i < last; i++) {
             sb.append((char) buffer[i]);

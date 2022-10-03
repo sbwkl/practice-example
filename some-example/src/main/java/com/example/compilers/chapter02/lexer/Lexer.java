@@ -27,7 +27,7 @@ public class Lexer {
                     do {
                         c = buffer.peek();
                     } while (c != '\n');
-                    String content = buffer.bufferContent();
+                    String content = buffer.content();
                     System.out.printf("comment: %s", peek + content);
                     buffer.clear();
                     peek = ' ';
@@ -38,14 +38,18 @@ public class Lexer {
                     do {
                         p1 = p2;
                         p2 = buffer.peek();
+                        if (p2 == '\n') {
+                            throw new RuntimeException("syntax error");
+                        }
                     } while (!(p1 == '*' && p2 == '/'));
-                    String content = buffer.bufferContent();
+                    String content = buffer.content();
+                    System.out.printf("comment: %s\n", peek + content);
                     buffer.clear();
-                    peek = '';
+                    peek = ' ';
                     continue;
                 } else {
-                    buffer.reset();
-                    peek = buffer.pop();
+                    buffer.resetIndex();
+                    break;
                 }
             }
             else break;
