@@ -2,6 +2,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #define YYSTYPE double
+
+int yylex();
 void yyerror(char *s);
 %}
 
@@ -13,9 +15,11 @@ lines   : lines expr '\n'   {printf("%lf\n", $2);}
         | 
         ;
 expr    : expr '+' term     {$$ = $1 + $3;}
+        | expr '-' term     {$$ = $1 - $3;}
         | term
         ;
 term    : term '*' factor   {$$ = $1 * $3;}
+        | term '/' factor   {$$ = $1 / $3;}
         | factor
         ;
 factor  : '(' expr ')'      {$$ = $2;}
