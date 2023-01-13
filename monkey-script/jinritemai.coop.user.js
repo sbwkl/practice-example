@@ -2,12 +2,13 @@
 // @name         jinritemai.coop
 // @namespace    https://sbwkl.github.io/
 // @version      0.2
-// @description  select product
-// @author       You
+// @description  one click copy product info
+// @author       wayne.wang
 // @match        https://buyin.jinritemai.com/dashboard/goodsCooperation/product-details*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=jinritemai.com
+// @icon         https://lf3-fe.ecombdstatic.com/obj/ecom-cdn-default/ecom/fe-alliance-home/out/favicon.ico
+// @downloadURL  https://raw.githubusercontent.com/sbwkl/practice-example/master/monkey-script/jinritemai.coop.js
 // @grant        none
-// @run-at       document-body
+// @run-at       document-idle
 // @license      MIT
 // ==/UserScript==
 
