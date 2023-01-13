@@ -6,7 +6,7 @@
 // @author       wayne.wang
 // @match        https://buyin.jinritemai.com/dashboard/goodsCooperation/product-details*
 // @icon         https://lf3-fe.ecombdstatic.com/obj/ecom-cdn-default/ecom/fe-alliance-home/out/favicon.ico
-// @downloadURL  https://raw.githubusercontent.com/sbwkl/practice-example/master/monkey-script/jinritemai.coop.js
+// @downloadURL  https://raw.githubusercontent.com/sbwkl/practice-example/master/monkey-script/jinritemai.coop.user.js
 // @grant        none
 // @run-at       document-idle
 // @license      MIT
