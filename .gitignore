@@ -249,3 +249,5 @@ package-lock.json
 .gradle/
 .class
 out/
+
+*.csv
