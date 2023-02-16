@@ -11,6 +11,8 @@
 // ==/UserScript==
 
 
+const userId = new URLSearchParams(window.location.href).get('creator_id');
+
 function createProductAnalysisButton() {
     const button = document.createElement('Button');
     button.style = 'top:0; right:0; position: absolute; z-index:9999;'
@@ -19,7 +21,6 @@ function createProductAnalysisButton() {
     document.body.appendChild(button);
 
     button.addEventListener('click', () => {
-        const userId = new URLSearchParams(window.location.href).get('creator_id');
         const baseInfoPromise = axios.get(`https://douhot.douyin.com/douhot/v1/author_analysis/author_info?sec_uid=${userId}`).then((r) => {
             const nickname = r.data.data.nickname.replace(/([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])/g, '');
             const avatarUrl = r.data.data.avatar_url;
@@ -90,4 +91,52 @@ function createProductAnalysisButton() {
     })
 }
 
+function createCheckboxButton() {
+    const button = document.createElement('Button');
+    button.style = 'top:50px; right:0; position: absolute; z-index:9999;'
+    const buttonName = '显示复选框';
+    button.innerHTML = buttonName;
+    document.body.appendChild(button);
+    button.addEventListener('click', () => {
+        const tableList = document.getElementsByTagName('table');
+        const exportButton = document.createElement('Button');
+        exportButton.innerHTML = '导出 SQL';
+        const div = tableList[0].children[1].firstElementChild.firstElementChild.firstElementChild
+        div.replaceChild(exportButton, div.firstElementChild);
+        exportButton.addEventListener('click', () => {
+            const checkboxList = document.getElementsByClassName('account-ref');
+            const accountList = [];
+            for (let cb of checkboxList) {
+                if (cb.checked) {
+                    const key = cb.getAttribute('data-key')
+                    accountList.push(dataset[key]);
+                }
+            }
+            const accountRef = JSON.stringify(accountList);
+            navigator.clipboard.writeText(`INSERT INTO rebate_douyin_account_report (user_id, account_ref) VALUES('${userId}', '${accountRef}') ON DUPLICATE KEY UPDATE account_ref='${accountRef}';`);
+        });
+
+        const trList = tableList[1].children[1].children;
+        let idx = 0;
+        for (let tr of trList) {
+            const td = tr.firstElementChild;
+            // const div = document.createElement('div');
+            // div.innerHTML = '<input type="checkbox"></input>';
+            // td.insertBefore(div, td.firstElementChild);
+            
+            const avatar = tr.children[1].getElementsByTagName('img')[0].src;
+            const iframe = tr.children[1].getElementsByTagName('iframe')[0]
+            const nickname = iframe.parentElement.children[1].innerText;
+            idx++;
+            dataset['account-ref-' + idx] = {
+                'avatar_url': avatar,
+                'nickname': nickname
+            }
+            td.firstElementChild.innerHTML = `<input type="checkbox" class="account-ref" data-key="account-ref-${idx}"></input>`;
+        }
+    });
+}
+
+const dataset = {}
 createProductAnalysisButton();
+createCheckboxButton();
