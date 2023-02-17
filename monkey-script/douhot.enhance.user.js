@@ -100,7 +100,7 @@ function createCheckboxButton() {
     button.addEventListener('click', () => {
         const tableList = document.getElementsByTagName('table');
         const exportButton = document.createElement('Button');
-        exportButton.innerHTML = '导出 SQL';
+        exportButton.innerHTML = '正在生成...';
         const div = tableList[0].children[1].firstElementChild.firstElementChild.firstElementChild
         div.replaceChild(exportButton, div.firstElementChild);
         exportButton.addEventListener('click', () => {
@@ -109,31 +109,38 @@ function createCheckboxButton() {
             for (let cb of checkboxList) {
                 if (cb.checked) {
                     const key = cb.getAttribute('data-key')
-                    accountList.push(dataset[key]);
+                    accountList.push({
+                        'avatar_url': dataset[key]['avatar_url'],
+                        'nickname': dataset[key]['nick_name'],
+                        'user_id': dataset[key]['user_id']
+                    });
                 }
             }
             const accountRef = JSON.stringify(accountList);
             navigator.clipboard.writeText(`INSERT INTO rebate_douyin_account_report (user_id, account_ref) VALUES('${userId}', '${accountRef}') ON DUPLICATE KEY UPDATE account_ref='${accountRef}';`);
         });
 
-        const trList = tableList[1].children[1].children;
-        let idx = 0;
-        for (let tr of trList) {
-            const td = tr.firstElementChild;
-            // const div = document.createElement('div');
-            // div.innerHTML = '<input type="checkbox"></input>';
-            // td.insertBefore(div, td.firstElementChild);
-            
-            const avatar = tr.children[1].getElementsByTagName('img')[0].src;
-            const iframe = tr.children[1].getElementsByTagName('iframe')[0]
-            const nickname = iframe.parentElement.children[1].innerText;
-            idx++;
-            dataset['account-ref-' + idx] = {
-                'avatar_url': avatar,
-                'nickname': nickname
+        axios.get(`https://douhot.douyin.com/douhot/v1/author_analysis/fans_interest/similar_author?sec_uid=${userId}`)
+        .then(r => {
+            for (let u of r.data.data) {
+                const nickname = u['nick_name'];
+                dataset[nickname] = u;
             }
-            td.firstElementChild.innerHTML = `<input type="checkbox" class="account-ref" data-key="account-ref-${idx}"></input>`;
-        }
+            const trList = tableList[1].children[1].children;
+            for (let tr of trList) {
+                const td = tr.firstElementChild;
+                // const div = document.createElement('div');
+                // div.innerHTML = '<input type="checkbox"></input>';
+                // td.insertBefore(div, td.firstElementChild);
+                
+                // const avatar = tr.children[1].getElementsByTagName('img')[0].src;
+                const iframe = tr.children[1].getElementsByTagName('iframe')[0]
+                const nickname = iframe.parentElement.children[1].innerText;
+                td.firstElementChild.innerHTML = `<input type="checkbox" class="account-ref" data-key="${nickname}"></input>`;
+            }
+        }).then(() => {
+            exportButton.innerHTML = '导出 SQL';
+        });
     });
 }
 
