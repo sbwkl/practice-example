@@ -112,7 +112,8 @@ function createCheckboxButton() {
                     accountList.push({
                         'avatar_url': dataset[key]['avatar_url'],
                         'nickname': dataset[key]['nick_name'],
-                        'user_id': dataset[key]['user_id']
+                        'user_id': dataset[key]['user_id'],
+                        'follower_count': dataset[key]['fans_cnt']
                     });
                 }
             }
