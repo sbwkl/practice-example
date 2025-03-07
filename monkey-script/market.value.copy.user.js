@@ -16,14 +16,14 @@
 
 function createButton() {
     const button = document.createElement('Button');
-    button.style = 'top:0; right:0; position: absolute; z-index:9999;'
+    button.style = 'top:0; right:0; position: fixed; z-index:9999;'
     const buttonName = '复制数据';
     button.innerHTML = buttonName;
     document.body.appendChild(button);
 
     button.addEventListener('click', () => {
+        button.innerHTML = '正在复制';
         const hostname = window.location.hostname;
-        const pathname = window.location.pathname;
         const shHost = 'www.sse.com.cn';
         const szHost = 'www.szse.cn'
         const bjHost = 'www.bseinfo.net'
@@ -32,20 +32,33 @@ function createButton() {
             const trList = document.querySelectorAll('tr');
             const e1 = Array.from(trList).find(e => e.firstChild.textContent == '市价总值(亿元)');
             const e2 = Array.from(trList).find(e => e.firstChild.textContent == '流通市值(亿元)');
-            const v1 = e1.children[1].textContent;
-            const v2 = e2.children[1].textContent;
+            var v1 = e1.children[1].textContent;
+            var v2 = e2.children[1].textContent;
+            if (v1 == '-') {
+                v1 = parseFloat(e1.children[2].textContent) + parseFloat(e1.children[3].textContent);
+            }
+            if (v2 == '-') {
+                v2 = parseFloat(e2.children[2].textContent) + parseFloat(e2.children[3].textContent);
+            }
             navigator.clipboard.writeText(v1 + '\t' + v2);
         } else if (exchange === 'sz') {
-            const tbody = document.querySelectorAll('tbody')[3];
-            const v1 = tbody.children[7].children[1].textContent;
-            const v2 = tbody.children[8].children[1].textContent;
+            const trList = document.querySelectorAll('tr');
+            const e1 = Array.from(trList).find(e => e.firstChild.textContent == '股票总市值（亿元）');
+            const e2 = Array.from(trList).find(e => e.firstChild.textContent == '股票流通市值（亿元）');
+            const v1 = e1.children[1].textContent;
+            const v2 = e2.children[1].textContent;
             navigator.clipboard.writeText(v1 + '\t' + v2);
         } else if (exchange === 'bj') {
             const tbody = document.querySelector('#dailyReport');
             const v1 = tbody.children[3].children[1].textContent;
             const v2 = tbody.children[3].children[3].textContent;
             navigator.clipboard.writeText(v1 + '\t' + v2);
+        } else {
+            navigator.clipboard.writeText('没有内容');
         }
+        setTimeout(() => {
+            button.innerHTML = buttonName;
+        }, 3000);
     });
 }
 
