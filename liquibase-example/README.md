@@ -4,9 +4,11 @@ This project demonstrates how to use Liquibase with Maven to manage database sch
 
 ## Prerequisites
 
-* Java Development Kit (JDK) 8 or higher
+* Java Development Kit (JDK) 8
 * Apache Maven
 * A running MySQL instance
+
+**Note:** This project is configured to use a version of the `liquibase-maven-plugin` that is compatible with Java 8.
 
 ## Configuration
 
