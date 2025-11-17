@@ -110,3 +110,25 @@ If you have modified a changeset that has already been deployed, you will get a 
 ```bash
 mvn liquibase:clearCheckSums -P<profile>
 ```
+
+## Troubleshooting
+
+### Rollback Issues
+
+If you find that running `mvn liquibase:rollback -Dliquibase.rollbackTag=<tag_name>` removes all tables, including those from the version you are rolling back to, it is likely that the `<tagDatabase>` changeset is being executed before the table creation changesets.
+
+To fix this, ensure that the `<tagDatabase>` changeset is the *last* changeset in your versioned changelog file. For example:
+
+```xml
+<databaseChangeLog ...>
+    <!-- Table creation changesets go here -->
+    <changeSet id="1.1.6-1" author="zhang">
+        <sqlFile .../>
+    </changeSet>
+
+    <!-- Tagging changeset should be last -->
+    <changeSet id="1.1.6-tag" author="zhang">
+        <tagDatabase tag="1.1.6"/>
+    </changeSet>
+</databaseChangeLog>
+```
