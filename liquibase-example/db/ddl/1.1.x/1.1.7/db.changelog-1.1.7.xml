@@ -2,10 +2,6 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
 
-    <changeSet id="1.1.7" author="zhang">
-        <tagDatabase tag="1.1.7"/>
-    </changeSet>
-
     <changeSet id="1.1.7-1" author="liu">
         <sqlFile encoding="UTF-8" relativeToChangelogFile="true" path="1.1.7-create-mi-message-info-table.sql"/>
         <rollback>
@@ -18,5 +14,8 @@
         <rollback>
             DROP TABLE IF EXISTS `me_message_entrance`;
         </rollback>
+    </changeSet>
+    <changeSet id="1.1.7-tag" author="zhang">
+        <tagDatabase tag="1.1.7"/>
     </changeSet>
 </databaseChangeLog>
