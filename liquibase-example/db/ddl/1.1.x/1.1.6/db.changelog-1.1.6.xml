@@ -7,13 +7,13 @@
         <tagDatabase tag="1.1.6"/>
     </changeSet>
     <changeSet id="1.1.6-1" author="zhang">
-        <sqlFile encoding="UTF-8" relativeToChangelogFile="true" path="001_table_dynamic_func_create.sql"/>
+        <sqlFile encoding="UTF-8" relativeToChangelogFile="true" path="1.1.6-create-dynamic-func-table.sql"/>
         <rollback>
             DROP TABLE IF EXISTS `dynamic_func`;
         </rollback>
     </changeSet>
     <changeSet id="1.1.6-2" author="li">
-        <sqlFile encoding="UTF-8" relativeToChangelogFile="true" path="008_table_user_push_create.sql"/>
+        <sqlFile encoding="UTF-8" relativeToChangelogFile="true" path="1.1.6-create-user-push-table.sql"/>
         <rollback>
             DROP TABLE IF EXISTS `user_push`;
         </rollback>

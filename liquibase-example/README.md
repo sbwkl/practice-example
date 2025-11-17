@@ -57,10 +57,10 @@ mvn liquibase:rollback "-Dliquibase.rollbackDate=YYYY-MM-DD HH:MM:SS" -P<profile
 
 #### Rollback to a Specific Tag
 
-To roll back all changesets applied after a specific tag, use the `toTag` parameter.
+To roll back all changesets applied after a specific tag, use the `rollbackTag` parameter.
 
 ```bash
-mvn liquibase:rollback -Dliquibase.toTag=<tag_name> -P<profile>
+mvn liquibase:rollback -Dliquibase.rollbackTag=<tag_name> -P<profile>
 ```
 
 ### Tagging the Database
