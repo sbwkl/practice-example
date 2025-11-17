@@ -31,3 +31,31 @@ The following chart displays the average time (in seconds) each library took to 
 | commonmark    | 0.003488               |
 
 As the results show, `cmarkgfm` is significantly faster than the other libraries.
+
+## How to Run the Benchmark
+
+You can run the benchmark yourself to reproduce these results.
+
+### Prerequisites
+
+*   Python 3
+*   `pip` for installing packages
+
+### Installation
+
+1.  Clone this repository.
+2.  Install the required Python libraries:
+
+    ```bash
+    pip install cmarkgfm markdown markdown2 mistune commonmark-py
+    ```
+
+### Running the Script
+
+Execute the `benchmark.py` script from the root of the project directory:
+
+```bash
+python benchmark.py
+```
+
+The script will print the average conversion time for each library to the console and save the results in `results.json`. You can also use `plot.py` to regenerate the performance chart.
