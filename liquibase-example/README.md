@@ -13,7 +13,7 @@ This project demonstrates how to use Liquibase with Maven to manage database sch
 ## Configuration
 
 1.  **Database Connection:** The database connection properties are defined in the `db/<environment>/liquibase.properties` files. You will need to update these files with your database connection details.
-2.  **Maven Profiles:** The `pom.xml` file includes profiles for different environments (e.g., `dev`, `dev-test`). You can activate a specific profile when running Maven commands.
+2.  **Maven Profiles:** The `pom.xml` file includes profiles for different environments (e.g., `dev`, `uat`). You can activate a specific profile when running Maven commands.
 
 ## How to Run
 
@@ -57,10 +57,10 @@ mvn liquibase:rollback "-Dliquibase.rollbackDate=YYYY-MM-DD HH:MM:SS" -P<profile
 
 #### Rollback to a Specific Tag
 
-To roll back all changesets applied after a specific tag, use the `toTag` parameter.
+To roll back all changesets applied after a specific tag, use the `rollbackTag` parameter.
 
 ```bash
-mvn liquibase:rollback -Dliquibase.toTag=<tag_name> -P<profile>
+mvn liquibase:rollback -Dliquibase.rollbackTag=<tag_name> -P<profile>
 ```
 
 ### Tagging the Database
@@ -109,4 +109,26 @@ If you have modified a changeset that has already been deployed, you will get a 
 
 ```bash
 mvn liquibase:clearCheckSums -P<profile>
+```
+
+## Troubleshooting
+
+### Rollback Issues
+
+If you find that running `mvn liquibase:rollback -Dliquibase.rollbackTag=<tag_name>` removes all tables, including those from the version you are rolling back to, it is likely that the `<tagDatabase>` changeset is being executed before the table creation changesets.
+
+To fix this, ensure that the `<tagDatabase>` changeset is the *last* changeset in your versioned changelog file. For example:
+
+```xml
+<databaseChangeLog ...>
+    <!-- Table creation changesets go here -->
+    <changeSet id="1.1.6-1" author="zhang">
+        <sqlFile .../>
+    </changeSet>
+
+    <!-- Tagging changeset should be last -->
+    <changeSet id="1.1.6-tag" author="zhang">
+        <tagDatabase tag="1.1.6"/>
+    </changeSet>
+</databaseChangeLog>
 ```
