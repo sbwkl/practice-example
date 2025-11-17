@@ -2,11 +2,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-	<preConditions>
-		<dbms type="sqlite" />
-	</preConditions>
-
-	<include file="1.1.x/db.changelog-1.1.x.xml" relativeToChangelogFile="true" />
-	<include file="1.2.x/db.changelog-1.2.x.xml" relativeToChangelogFile="true" />
+	<include file="1.2.0/db.changelog-1.2.0.xml" relativeToChangelogFile="true" />
+	<include file="1.2.1/db.changelog-1.2.1.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>

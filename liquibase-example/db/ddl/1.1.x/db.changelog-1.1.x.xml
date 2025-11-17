@@ -3,7 +3,15 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
+	<include file="1.1.0/db.changelog-1.1.0.xml" relativeToChangelogFile="true" />
+	<include file="1.1.1/db.changelog-1.1.1.xml" relativeToChangelogFile="true" />
+	<include file="1.1.2/db.changelog-1.1.2.xml" relativeToChangelogFile="true" />
+	<include file="1.1.3/db.changelog-1.1.3.xml" relativeToChangelogFile="true" />
+	<include file="1.1.4/db.changelog-1.1.4.xml" relativeToChangelogFile="true" />
+	<include file="1.1.5/db.changelog-1.1.5.xml" relativeToChangelogFile="true" />
 	<include file="1.1.6/db.changelog-1.1.6.xml" relativeToChangelogFile="true" />
 	<include file="1.1.7/db.changelog-1.1.7.xml" relativeToChangelogFile="true" />
+	<include file="1.1.8/db.changelog-1.1.8.xml" relativeToChangelogFile="true" />
+	<include file="1.1.9/db.changelog-1.1.9.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>
