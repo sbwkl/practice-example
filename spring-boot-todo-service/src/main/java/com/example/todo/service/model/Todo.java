@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,6 +19,9 @@ public class Todo {
 
     private String description;
 
+    @TableField("attachment")
+    private String attachment;
+
     @TableField("status")
     private TodoStatus status;
 
@@ -27,7 +29,7 @@ public class Todo {
     private TodoPriority priority;
 
     @TableField("due_date")
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
