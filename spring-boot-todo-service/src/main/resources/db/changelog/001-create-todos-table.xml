@@ -7,7 +7,7 @@
 
     <changeSet id="1" author="jules">
         <createTable tableName="todos">
-            <column name="id" type="BIGINT" autoIncrement="true">
+            <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="title" type="VARCHAR(255)">
