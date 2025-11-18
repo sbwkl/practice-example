@@ -1,6 +1,5 @@
 package com.example.todo.service;
 
-import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.example.todo.service.dto.CreateTodoRequest;
 import com.example.todo.service.dto.UpdateTodoRequest;
 import com.example.todo.service.model.Todo;
@@ -10,14 +9,10 @@ import com.example.todo.service.mapper.TodoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -25,12 +20,8 @@ import java.time.LocalDate;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(classes = SpringBootTodoServiceApplication.class)
+@SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-@EnableAutoConfiguration(exclude = {MybatisPlusAutoConfiguration.class})
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@MapperScan("com.example.todo.service.mapper")
 public class TodoControllerIntegrationTest {
 
     @Autowired
