@@ -1,9 +1,9 @@
-package com.example.todoservice.controller;
+package com.example.todo.service.controller;
 
-import com.example.todoservice.dto.CreateTodoRequest;
-import com.example.todoservice.dto.TodoDto;
-import com.example.todoservice.dto.UpdateTodoRequest;
-import com.example.todoservice.service.TodoService;
+import com.example.todo.service.dto.CreateTodoRequest;
+import com.example.todo.service.dto.TodoDto;
+import com.example.todo.service.dto.UpdateTodoRequest;
+import com.example.todo.service.service.TodoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

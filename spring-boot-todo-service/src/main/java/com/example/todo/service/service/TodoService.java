@@ -1,8 +1,8 @@
-package com.example.todoservice.service;
+package com.example.todo.service.service;
 
-import com.example.todoservice.dto.CreateTodoRequest;
-import com.example.todoservice.dto.TodoDto;
-import com.example.todoservice.dto.UpdateTodoRequest;
+import com.example.todo.service.dto.CreateTodoRequest;
+import com.example.todo.service.dto.TodoDto;
+import com.example.todo.service.dto.UpdateTodoRequest;
 
 import java.util.List;
 

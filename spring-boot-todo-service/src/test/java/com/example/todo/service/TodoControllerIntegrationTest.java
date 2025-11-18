@@ -1,10 +1,11 @@
-package com.example.todoservice;
+package com.example.todo.service;
 
-import com.example.todoservice.dto.CreateTodoRequest;
-import com.example.todoservice.model.Todo;
-import com.example.todoservice.model.TodoPriority;
-import com.example.todoservice.model.TodoStatus;
-import com.example.todoservice.mapper.TodoMapper;
+import com.example.todo.service.dto.CreateTodoRequest;
+import com.example.todo.service.dto.UpdateTodoRequest;
+import com.example.todo.service.model.Todo;
+import com.example.todo.service.model.TodoPriority;
+import com.example.todo.service.model.TodoStatus;
+import com.example.todo.service.mapper.TodoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,7 +92,7 @@ public class TodoControllerIntegrationTest {
         todo.setPriority(TodoPriority.LOW);
         todoMapper.insert(todo);
 
-        com.example.todoservice.dto.UpdateTodoRequest updateRequest = new com.example.todoservice.dto.UpdateTodoRequest();
+        UpdateTodoRequest updateRequest = new UpdateTodoRequest();
         updateRequest.setTitle("New Title");
         updateRequest.setPriority(TodoPriority.HIGH);
         updateRequest.setStatus(TodoStatus.COMPLETED);

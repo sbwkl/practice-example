@@ -1,7 +1,7 @@
-package com.example.todoservice.mapper;
+package com.example.todo.service.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.example.todoservice.model.Todo;
+import com.example.todo.service.model.Todo;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

@@ -1,11 +1,12 @@
-package com.example.todoservice.service;
+package com.example.todo.service.service;
 
-import com.example.todoservice.dto.CreateTodoRequest;
-import com.example.todoservice.dto.TodoDto;
-import com.example.todoservice.dto.UpdateTodoRequest;
-import com.example.todoservice.mapper.TodoMapper;
-import com.example.todoservice.model.Todo;
-import com.example.todoservice.model.TodoStatus;
+import com.example.todo.service.dto.CreateTodoRequest;
+import com.example.todo.service.dto.TodoDto;
+import com.example.todo.service.dto.UpdateTodoRequest;
+import com.example.todo.service.exception.ResourceNotFoundException;
+import com.example.todo.service.mapper.TodoMapper;
+import com.example.todo.service.model.Todo;
+import com.example.todo.service.model.TodoStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class TodoServiceImpl implements TodoService {
     public TodoDto findById(Long id) {
         Todo todo = todoMapper.selectById(id);
         if (todo == null) {
-            throw new com.example.todoservice.exception.ResourceNotFoundException("Todo not found with id: " + id);
+            throw new ResourceNotFoundException("Todo not found with id: " + id);
         }
         return convertToDto(todo);
     }
@@ -53,7 +54,7 @@ public class TodoServiceImpl implements TodoService {
     public TodoDto update(Long id, UpdateTodoRequest request) {
         Todo todo = todoMapper.selectById(id);
         if (todo == null) {
-            throw new com.example.todoservice.exception.ResourceNotFoundException("Todo not found with id: " + id);
+            throw new ResourceNotFoundException("Todo not found with id: " + id);
         }
         todo.setTitle(request.getTitle());
         todo.setDescription(request.getDescription());

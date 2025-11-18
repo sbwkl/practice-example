@@ -1,4 +1,4 @@
-package com.example.todoservice.model;
+package com.example.todo.service.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

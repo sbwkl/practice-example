@@ -1,4 +1,4 @@
-package com.example.todoservice.model;
+package com.example.todo.service.model;
 
 public enum TodoPriority {
     LOW,

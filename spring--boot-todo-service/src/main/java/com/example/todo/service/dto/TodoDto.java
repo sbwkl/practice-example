@@ -1,7 +1,7 @@
-package com.example.todoservice.dto;
+package com.example.todo.service.dto;
 
-import com.example.todoservice.model.TodoPriority;
-import com.example.todoservice.model.TodoStatus;
+import com.example.todo.service.model.TodoPriority;
+import com.example.todo.service.model.TodoStatus;
 import lombok.Data;
 
 import java.time.LocalDate;
