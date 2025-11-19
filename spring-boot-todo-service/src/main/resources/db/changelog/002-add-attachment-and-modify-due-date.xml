@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd">
+
+    <changeSet id="2" author="jules">
+        <sql>
+            -- Recreate the table with the new schema
+            CREATE TABLE todos_new (
+                id INTEGER NOT NULL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                attachment VARCHAR(255),
+                status VARCHAR(50) NOT NULL,
+                priority VARCHAR(50) NOT NULL,
+                due_date TIMESTAMP,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Copy the data
+            INSERT INTO todos_new (id, title, description, status, priority, due_date, created_at, updated_at)
+            SELECT id, title, description, status, priority, due_date, created_at, updated_at FROM todos;
+
+            -- Drop the old table
+            DROP TABLE todos;
+
+            -- Rename the new table
+            ALTER TABLE todos_new RENAME TO todos;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
