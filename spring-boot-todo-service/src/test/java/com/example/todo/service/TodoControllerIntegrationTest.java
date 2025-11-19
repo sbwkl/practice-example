@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -43,7 +43,7 @@ public class TodoControllerIntegrationTest {
         CreateTodoRequest request = new CreateTodoRequest();
         request.setTitle("Test Todo");
         request.setPriority(TodoPriority.HIGH);
-        request.setDueDate(LocalDate.now());
+        request.setDueDate(LocalDateTime.now());
 
         mockMvc.perform(post("/api/todos")
                 .contentType(MediaType.APPLICATION_JSON)
