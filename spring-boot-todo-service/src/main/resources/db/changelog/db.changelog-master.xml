@@ -6,5 +6,7 @@
 
     <include file="001-create-todos-table.xml" relativeToChangelogFile="true"/>
     <include file="002-add-attachment-and-modify-due-date.xml" relativeToChangelogFile="true"/>
+    <include file="003-create-users-table.xml" relativeToChangelogFile="true"/>
+    <include file="004-add-user-id-to-todos-table.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

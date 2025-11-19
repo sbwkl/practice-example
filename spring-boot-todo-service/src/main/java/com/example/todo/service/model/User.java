@@ -9,30 +9,15 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("todos")
-public class Todo {
+@TableName("users")
+public class User {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    @TableField("user_id")
-    private Long userId;
+    private String username;
 
-    private String title;
-
-    private String description;
-
-    @TableField("attachment")
-    private String attachment;
-
-    @TableField("status")
-    private TodoStatus status;
-
-    @TableField("priority")
-    private TodoPriority priority;
-
-    @TableField("due_date")
-    private LocalDateTime dueDate;
+    private String password;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
