@@ -36,14 +36,14 @@ public class TodoController {
 
     @PostMapping
     @Operation(summary = "Create a new todo item")
-    public ResponseEntity<TodoDto> createTodo(@RequestBody CreateTodoRequest request) {
+    public ResponseEntity<TodoDto> createTodo(@Valid @RequestBody CreateTodoRequest request) {
         TodoDto createdTodo = todoService.create(request);
         return new ResponseEntity<>(createdTodo, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing todo item")
-    public ResponseEntity<TodoDto> updateTodo(@PathVariable Long id, @RequestBody UpdateTodoRequest request) {
+    public ResponseEntity<TodoDto> updateTodo(@PathVariable Long id, @Valid @RequestBody UpdateTodoRequest request) {
         TodoDto updatedTodo = todoService.update(id, request);
         return updatedTodo != null ? ResponseEntity.ok(updatedTodo) : ResponseEntity.notFound().build();
     }

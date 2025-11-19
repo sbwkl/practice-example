@@ -41,6 +41,7 @@ public class TodoServiceImpl implements TodoService {
         Todo todo = new Todo();
         todo.setTitle(request.getTitle());
         todo.setDescription(request.getDescription());
+        todo.setAttachment(request.getAttachment());
         todo.setStatus(TodoStatus.PENDING); // Default status
         todo.setPriority(request.getPriority());
         todo.setDueDate(request.getDueDate());
@@ -58,6 +59,7 @@ public class TodoServiceImpl implements TodoService {
         }
         todo.setTitle(request.getTitle());
         todo.setDescription(request.getDescription());
+        todo.setAttachment(request.getAttachment());
         todo.setStatus(request.getStatus());
         todo.setPriority(request.getPriority());
         todo.setDueDate(request.getDueDate());
@@ -79,6 +81,7 @@ public class TodoServiceImpl implements TodoService {
         dto.setId(todo.getId());
         dto.setTitle(todo.getTitle());
         dto.setDescription(todo.getDescription());
+        dto.setAttachment(todo.getAttachment());
         dto.setStatus(todo.getStatus());
         dto.setPriority(todo.getPriority());
         dto.setDueDate(todo.getDueDate());
