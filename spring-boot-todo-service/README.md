@@ -12,6 +12,8 @@
 *   SQLite 数据库
 *   RESTful API 设计
 *   OpenAPI 3.0 (Swagger) 文档生成
+*   Spring Security 认证与授权
+*   JWT (JSON Web Token)
 
 ## 主要功能
 
@@ -26,6 +28,8 @@
 *   **数据持久化**: MyBatis Plus 3.5.7
 *   **数据库**: SQLite
 *   **数据库迁移**: Liquibase
+*   **安全框架**: Spring Security
+*   **认证机制**: JWT (JSON Web Token)
 *   **API 文档**: SpringDoc (OpenAPI 3.0)
 *   **构建工具**: Maven
 *   **开发语言**: Java 17
@@ -65,40 +69,77 @@
 
 ## API 使用示例
 
-你可以使用 `curl` 或任何 API 测试工具与服务进行交互。
+本项目启用了安全认证，访问受保护的 API（如 CRUD 操作）需要携带 JWT 令牌。
 
-### 1. 创建一个新的待办事项
+### 1. 用户认证
+
+#### 1.1 注册新用户
+
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+-H "Content-Type: application/json" \
+-d '{"username": "user", "password": "password"}'
+```
+
+#### 1.2 登录获取 Token
+
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+-H "Content-Type: application/json" \
+-d '{"username": "user", "password": "password"}'
+```
+
+响应示例：
+```json
+{
+    "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+**注意**：请保存响应中的 `token`，后续请求需要在 Header 中携带：`Authorization: Bearer <token>`。
+
+### 2. 待办事项管理 (需要认证)
+
+以下示例假设你已经获取了 Token，并将其设置为环境变量 `TOKEN`。
+(或者手动替换 `<your_token>`)
+
+#### 2.1 创建一个新的待办事项
 
 ```bash
 curl -X POST http://localhost:8080/api/todos \
 -H "Content-Type: application/json" \
+-H "Authorization: Bearer <your_token>" \
 -d '{"title": "学习 Spring Boot", "description": "完成 README 的编写"}'
 ```
 
-### 2. 获取所有待办事项
+#### 2.2 获取所有待办事项
 
 ```bash
-curl -X GET http://localhost:8080/api/todos
+curl -X GET http://localhost:8080/api/todos \
+-H "Authorization: Bearer <your_token>"
 ```
 
-### 3. 获取单个待办事项
+#### 2.3 获取单个待办事项
 
 ```bash
-curl -X GET http://localhost:8080/api/todos/1
+curl -X GET http://localhost:8080/api/todos/1 \
+-H "Authorization: Bearer <your_token>"
 ```
 
-### 4. 更新待办事项
+#### 2.4 更新待办事项
 
 ```bash
 curl -X PUT http://localhost:8080/api/todos/1 \
 -H "Content-Type: application/json" \
+-H "Authorization: Bearer <your_token>" \
 -d '{"title": "学习 Spring Boot", "description": "完成 README 的编写，并提交", "completed": true}'
 ```
 
-### 5. 删除待办事项
+#### 2.5 删除待办事项
 
 ```bash
-curl -X DELETE http://localhost:8080/api/todos/1
+curl -X DELETE http://localhost:8080/api/todos/1 \
+-H "Authorization: Bearer <your_token>"
 ```
 
 你也可以通过浏览器访问 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) 来查看和测试所有 API。
