@@ -8,6 +8,7 @@ import com.example.todo.service.exception.ResourceNotFoundException;
 import com.example.todo.service.mapper.TodoMapper;
 import com.example.todo.service.mapper.UserMapper;
 import com.example.todo.service.model.Todo;
+import com.example.todo.service.model.TodoPriority;
 import com.example.todo.service.model.TodoStatus;
 import com.example.todo.service.model.User;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +55,7 @@ public class TodoServiceImpl implements TodoService {
         todo.setDescription(request.getDescription());
         todo.setAttachment(request.getAttachment());
         todo.setStatus(TodoStatus.PENDING); // Default status
-        todo.setPriority(request.getPriority());
+        todo.setPriority(request.getPriority() == null ? TodoPriority.MEDIUM : request.getPriority());
         todo.setDueDate(request.getDueDate());
         todo.setCreatedAt(LocalDateTime.now());
         todo.setUpdatedAt(LocalDateTime.now());
