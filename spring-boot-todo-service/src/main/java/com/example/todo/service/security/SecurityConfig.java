@@ -41,14 +41,26 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers("/api/auth/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**")
+                        .permitAll()
+                        .anyRequest().authenticated());
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.addAllowedOrigin("*");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
