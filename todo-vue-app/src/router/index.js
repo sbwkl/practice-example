@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import LoginView from '../views/LoginView.vue';
+import RegisterView from '../views/RegisterView.vue';
 import App from '../App.vue'; // We might need a separate Home view, but for now let's see. 
 // Actually, App.vue is the root. We should probably move the Todo list to a HomeView.
 // But to minimize changes, let's assume App.vue will contain the router-view, 
@@ -18,6 +19,11 @@ const router = createRouter({
             path: '/login',
             name: 'login',
             component: LoginView
+        },
+        {
+            path: '/register',
+            name: 'register',
+            component: RegisterView
         },
         {
             path: '/',

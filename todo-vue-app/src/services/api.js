@@ -27,6 +27,9 @@ export default {
   login(credentials) {
     return apiClient.post('/auth/login', credentials);
   },
+  register(credentials) {
+    return apiClient.post('/auth/register', credentials);
+  },
   getTodos() {
     return apiClient.get('/todos');
   },
