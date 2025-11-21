@@ -1,0 +1,6 @@
+spring:
+  ai:
+    mcp:
+      server:
+        enabled: true
+        sse-endpoint: /mcp/sse
