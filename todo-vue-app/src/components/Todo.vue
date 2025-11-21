@@ -50,7 +50,7 @@ export default {
           const newTodoData = {
               title: this.newTodo.title,
               description: " ",
-              status: 'TODO',
+              status: 'PENDING',
           };
           const response = await api.createTodo(newTodoData);
           this.todos.push({ ...response.data, editing: false });
@@ -69,7 +69,7 @@ export default {
       }
     },
     async toggleTodoStatus(todo) {
-      const newStatus = todo.status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
+      const newStatus = todo.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
       try {
         const updatedTodo = { ...todo, status: newStatus };
         await api.updateTodo(todo.id, updatedTodo);
