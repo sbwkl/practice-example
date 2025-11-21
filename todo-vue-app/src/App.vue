@@ -1,17 +1,22 @@
 <template>
   <div id="app">
-    <Todo />
+    <nav v-if="authStore.isAuthenticated">
+      <button @click="handleLogout">Logout</button>
+    </nav>
+    <router-view />
   </div>
 </template>
 
-<script>
-import Todo from './components/Todo.vue';
+<script setup>
+import { useAuthStore } from './stores/auth';
+import { useRouter } from 'vue-router';
 
-export default {
-  name: 'App',
-  components: {
-    Todo
-  }
+const authStore = useAuthStore();
+const router = useRouter();
+
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/login');
 };
 </script>
 
@@ -24,4 +29,16 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
+nav {
+  padding: 30px;
+}
+nav button {
+  padding: 10px 20px;
+  background-color: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
 </style>
+
