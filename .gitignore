@@ -253,4 +253,4 @@ out/
 *.csv
 
 .trae/
-.vscode/
+.vscode/\n# Frontend\n/todo-frontend/dist\n/todo-frontend/node_modules
