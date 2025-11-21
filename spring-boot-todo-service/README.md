@@ -144,6 +144,103 @@ curl -X DELETE http://localhost:8080/api/todos/1 \
 
 你也可以通过浏览器访问 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) 来查看和测试所有 API。
 
+## MCP (Model Context Protocol) 功能
+
+本项目集成了 MCP (Model Context Protocol) 服务器功能，允许 AI 模型和 MCP 客户端通过标准化协议访问待办事项和用户管理功能。
+
+### MCP 概述
+
+MCP 是一个标准化协议，使 AI 模型能够与外部工具和数据源进行交互。本项目通过 Spring AI MCP 框架暴露了以下功能：
+
+### 可用的 MCP 工具
+
+#### 用户管理工具
+
+1. **register_user** - 注册新用户
+   - 参数：`username` (用户名), `password` (密码)
+   - 返回：用户 ID 和注册成功消息
+
+2. **login_user** - 用户登录并获取 JWT 令牌
+   - 参数：`username` (用户名), `password` (密码)
+   - 返回：JWT 令牌用于后续认证请求
+
+3. **get_current_user** - 获取当前认证用户信息
+   - 参数：无（需要认证）
+   - 返回：用户 ID、用户名和创建时间
+
+#### 待办事项管理工具
+
+1. **list_todos** - 列出当前用户的所有待办事项
+   - 参数：无（需要认证）
+   - 返回：待办事项列表
+
+2. **get_todo** - 获取指定 ID 的待办事项
+   - 参数：`id` (待办事项 ID)
+   - 返回：待办事项详情
+
+3. **create_todo** - 创建新的待办事项
+   - 参数：
+     - `title` (必填) - 标题
+     - `description` (可选) - 描述
+     - `priority` (可选) - 优先级：LOW, MEDIUM, HIGH
+     - `dueDate` (可选) - 截止日期 (ISO 格式)
+   - 返回：创建的待办事项
+
+4. **update_todo** - 更新现有待办事项
+   - 参数：
+     - `id` (必填) - 待办事项 ID
+     - `title` (可选) - 新标题
+     - `description` (可选) - 新描述
+     - `status` (可选) - 新状态：PENDING, IN_PROGRESS, COMPLETED
+     - `priority` (可选) - 新优先级：LOW, MEDIUM, HIGH
+     - `dueDate` (可选) - 新截止日期 (ISO 格式)
+   - 返回：更新后的待办事项
+
+5. **delete_todo** - 删除待办事项
+   - 参数：`id` (待办事项 ID)
+   - 返回：删除成功消息
+
+### 连接 MCP 客户端
+
+MCP 服务器通过 SSE (Server-Sent Events) 在以下端点提供服务：
+
+```
+http://localhost:8080/mcp/sse
+```
+
+#### 使用 Claude Desktop 连接
+
+在 Claude Desktop 的配置文件中添加以下配置：
+
+```json
+{
+  "mcpServers": {
+    "spring-boot-todo-service": {
+      "url": "http://localhost:8080/mcp/sse"
+    }
+  }
+}
+```
+
+#### 认证说明
+
+- 用户管理工具（`register_user`, `login_user`）无需认证
+- 待办事项管理工具和 `get_current_user` 需要 JWT 认证
+- 使用 `login_user` 工具获取 JWT 令牌后，MCP 客户端需要在后续请求中携带该令牌
+
+### MCP 使用示例
+
+1. **注册并登录**：
+   - 使用 `register_user` 创建账户
+   - 使用 `login_user` 获取 JWT 令牌
+
+2. **管理待办事项**：
+   - 使用 `create_todo` 创建新任务
+   - 使用 `list_todos` 查看所有任务
+   - 使用 `update_todo` 更新任务状态
+   - 使用 `delete_todo` 删除完成的任务
+
+
 ## 开发指南
 
 ### 项目结构
