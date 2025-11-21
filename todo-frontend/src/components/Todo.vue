@@ -1,17 +1,22 @@
 <template>
-  <div>
-    <h1>Todo List</h1>
-    <input v-model="newTodo.title" @keyup.enter="addTodo" placeholder="Add a new todo" />
-    <ul>
-      <li v-for="todo in todos" :key="todo.id">
-        <span v-if="!todo.editing">{{ todo.title }}</span>
-        <input v-else v-model="todo.title" @keyup.enter="updateTodo(todo)" @blur="updateTodo(todo)" />
-        <div class="buttons">
-          <button class="edit-btn" @click="toggleEdit(todo)">{{ todo.editing ? 'Cancel' : 'Edit' }}</button>
+  <div id="todo-app">
+    <div class="container">
+      <h1>Todo List</h1>
+      <div class="input-group">
+        <input type="text" v-model="newTodo.title" @keyup.enter="addTodo" placeholder="Add a new todo...">
+        <button @click="addTodo">Add</button>
+      </div>
+      <ul class="todo-list">
+        <li v-for="todo in todos" :key="todo.id" :class="{ completed: todo.status === 'COMPLETED' }">
+          <div class="todo-item">
+            <input type="checkbox" :checked="todo.status === 'COMPLETED'" @change="toggleTodoStatus(todo)">
+            <span v-if="!todo.editing" @dblclick="editTodo(todo)">{{ todo.title }}</span>
+            <input v-else type="text" v-model="todo.title" @keyup.enter="updateTodo(todo)" @blur="updateTodo(todo)" ref="editInput">
+          </div>
           <button class="delete-btn" @click="deleteTodo(todo.id)">Delete</button>
-        </div>
-      </li>
-    </ul>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -46,7 +51,6 @@ export default {
               title: this.newTodo.title,
               description: " ",
               status: 'TODO',
-              priority: 'MEDIUM',
           };
           const response = await api.createTodo(newTodoData);
           this.todos.push({ ...response.data, editing: false });
@@ -56,20 +60,6 @@ export default {
         }
       }
     },
-    toggleEdit(todo) {
-      todo.editing = !todo.editing;
-    },
-    async updateTodo(todo) {
-      if (!todo.editing) return;
-      todo.editing = false;
-      try {
-        await api.updateTodo(todo.id, { title: todo.title, description: todo.description, status: todo.status, priority: todo.priority });
-      } catch (error) {
-        console.error('Error updating todo:', error);
-        // Optionally revert the change in the UI
-        this.fetchTodos();
-      }
-    },
     async deleteTodo(id) {
       try {
         await api.deleteTodo(id);
@@ -77,69 +67,107 @@ export default {
       } catch (error) {
         console.error('Error deleting todo:', error);
       }
+    },
+    async toggleTodoStatus(todo) {
+      const newStatus = todo.status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
+      try {
+        const updatedTodo = { ...todo, status: newStatus };
+        await api.updateTodo(todo.id, updatedTodo);
+        todo.status = newStatus;
+      } catch (error) {
+        console.error('Error updating todo status:', error);
+      }
+    },
+    editTodo(todo) {
+      const index = this.todos.findIndex(t => t.id === todo.id);
+      todo.editing = true;
+      this.$nextTick(() => {
+        if (this.$refs.editInput && this.$refs.editInput[index]) {
+          this.$refs.editInput[index].focus();
+        }
+      });
+    },
+    async updateTodo(todo) {
+      if (!todo.editing) return;
+      todo.editing = false;
+      try {
+        await api.updateTodo(todo.id, { title: todo.title, description: todo.description, status: todo.status });
+      } catch (error) {
+        console.error('Error updating todo:', error);
+        // Optionally revert the change in the UI
+        this.fetchTodos();
+      }
     }
   }
 };
 </script>
 
 <style scoped>
-div {
+.container {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  text-align: left;
+  color: #333;
 }
 
 h1 {
   text-align: center;
   color: #2c3e50;
-}
-
-input {
-  width: calc(100% - 40px);
-  padding: 10px;
   margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
 }
 
-ul {
-  list-style-type: none;
+.input-group {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
+}
+
+.input-group button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #42b983;
+  color: white;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+}
+
+.todo-list {
+  list-style: none;
   padding: 0;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
 }
 
 li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 10px;
+  background-color: #f9f9f9;
   border-bottom: 1px solid #eee;
 }
 
-span {
-  cursor: pointer;
-}
-
-.buttons {
-  display: flex;
-  gap: 10px;
-}
-
-button {
-  padding: 5px 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: white;
-}
-
-.edit-btn {
-  background-color: #42b983;
+li.completed span {
+  text-decoration: line-through;
+  color: #999;
 }
 
 .delete-btn {
   background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
