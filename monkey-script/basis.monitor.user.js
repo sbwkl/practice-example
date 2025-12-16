@@ -20,24 +20,14 @@
 
     if (currentUrl == 'https://quote.eastmoney.com/') {
       // 聚合计算
-      function watchStorage(key, handler) {
-            function schedule(e) {
-                handler(e);
-            }
-
-            GM_addValueChangeListener(key, function(name, oldVal, newVal, remote) {
-              schedule(newValue);
-            });
-        }
-
         let lastNotify = 0;
 
-        watchStorage('dataSource', (e) => {
-          usdcnh = GM_getValue('USDCNH');
-          gc = GM_getValue('GC00Y');
-          au = GM_getValue('aum');
-          si = GM_getValue('SI00Y');
-          ag = GM_getValue('agm');
+        GM_addValueChangeListener('dataSource', (name, oldVal, newVal, remote) => {
+          const usdcnh = GM_getValue('USDCNH');
+          const gc = GM_getValue('GC00Y');
+          const au = GM_getValue('aum');
+          const si = GM_getValue('SI00Y');
+          const ag = GM_getValue('agm');
 
           let b1 = au - gc * usdcnh / 31.1034768
           let b2 = ag - si * usdcnh * 1000 / 31.1034768;
