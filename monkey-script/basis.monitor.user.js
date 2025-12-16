@@ -13,27 +13,20 @@
 // @description 12/15/2025, 4:26:43 PM
 // ==/UserScript==
 
-
 (function() {
     'use strict';
 
     var currentUrl = window.location.href;
 
-    if (currentUrl == 'https://quote.eastmoney.com') {
+    if (currentUrl == 'https://quote.eastmoney.com/') {
       // 聚合计算
       function watchStorage(key, handler) {
-          function schedule(e) {
-            handler(e);
-          }
-
-          window.addEventListener('storage', e => {
-            if (e.key === key) {
-              schedule(e);
+            function schedule(e) {
+                handler(e);
             }
-          });
 
             GM_addValueChangeListener(key, function(name, oldVal, newVal, remote) {
-              schedule(e);
+              schedule(newValue);
             });
         }
 
