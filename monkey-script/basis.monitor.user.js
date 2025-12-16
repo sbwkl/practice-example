@@ -2,6 +2,7 @@
 // @name        Basis Monitor
 // @namespace   https://sbwkl.github.io/
 // @match       https://quote.eastmoney.com/*/*.html
+// @match       https://www.investing.com/*/*
 // @match       https://quote.eastmoney.com/
 // @exclude     https://quote.eastmoney.com/newstatic/html/profitchart_new.html*
 // @grant       GM_setValue
@@ -19,61 +20,72 @@
     var currentUrl = window.location.href;
 
     if (currentUrl == 'https://quote.eastmoney.com/') {
-      // 聚合计算
+        startMonitor();
+    } else if (currentUrl.startsWith('https://quote.eastmoney.com/')) {
+        var parts = currentUrl.split('/');
+        var symbol = parts[parts.length - 1].replace('.html', '');
+        const targetNode = document.querySelector('.zxj');
+        startUploadData(targetNode, symbol);
+    } else if (currentUrl.startsWith('https://www.investing.com/')) {
+        setTimeout(() => {
+            var parts = currentUrl.split('/');
+            var symbol = parts[parts.length - 1];
+            const targetNode = document.querySelector('.text-5xl\\/9');;
+            startUploadData(targetNode, symbol);
+        }, 10000);
+    }
+
+    // 聚合计算
+    function startMonitor() {
         let lastNotify = 0;
 
         GM_addValueChangeListener('dataSource', (name, oldVal, newVal, remote) => {
-          const usdcnh = GM_getValue('USDCNH');
-          const gc = GM_getValue('GC00Y');
-          const au = GM_getValue('aum');
-          const si = GM_getValue('SI00Y');
-          const ag = GM_getValue('agm');
+            const usdcnh = GM_getValue('USDCNH');
+            const gc = Number(GM_getValue('gold').replace(/,/g, ''));
+            const au = GM_getValue('aum');
+            const si = GM_getValue('silver');
+            const ag = GM_getValue('agm');
 
-          let b1 = au - gc * usdcnh / 31.1034768
-          let b2 = ag - si * usdcnh * 1000 / 31.1034768;
+            let b1 = au - gc * usdcnh / 31.1034768;
+            let b2 = ag - si * usdcnh * 1000 / 31.1034768;
 
-          console.log('黄金基差: ', b1);
-          console.log('白银基差: ', b2)
+            console.log('黄金基差: ', b1);
+            console.log('白银基差: ', b2);
 
-          let title = '';
-          let text = '';
-          let notify = false;
+            let title = '';
+            let text = '';
+            let notify = false;
 
-          if (b1 < -13.98) {
-            title += `黄金基差：${b1} `;
-            text += '518850 多 1OZ 空 ';
-            notify = true
-          }
+            if (b1 < -13.98) {
+                title += `黄金基差：${b1} `;
+                text += '518850 多 1OZ 空 ';
+                notify = true;
+            }
 
-          if (b2 < 138 || b2 > 610) {
-            title += `白银基差：${b2} `;
-            text += `AU ${b2 < 138 ? '多' : '空'} SI ${b2 < 138 ? '多' : '空'}`
-            notify = true
-          }
+            if (b2 < 138 || b2 > 610) {
+                title += `白银基差：${b2} `;
+                text += `AU ${b2 < 138 ? '多' : '空'} SI ${b2 < 138 ? '多' : '空'}`;
+                notify = true;
+            }
 
-          const now = Date.now();
+            const now = Date.now();
 
-          if (now - lastNotify > 5 * 60 * 1000 && notify) {
-            lastNotify = now;
-            GM_notification({
-                title: '基差大于 ' + basis,
-                text: '518850 多 1OZ 空',
-                image: '',
-                timeout: 5000,
-                onclick: null
-            });
-          }
+            if (now - lastNotify > 5 * 60 * 1000 && notify) {
+                lastNotify = now;
+                GM_notification({
+                    title: '基差大于 ' + basis,
+                    text: '518850 多 1OZ 空',
+                    image: '',
+                    timeout: 5000,
+                    onclick: null
+                });
+            }
         });
 
-        console.log('开始监控...')
-    } else {
-        // 监控上报
+        console.log('开始监控...');
+    }
 
-        var parts = currentUrl.split('/');
-        var symbol = parts[parts.length - 1].replace('.html', '');
-
-        // 1. 找到需要监控的目标元素
-        const targetNode = document.querySelector('.zxj');
+    function startUploadData(targetNode, symbol) {
 
         if (!targetNode) {
             console.log('未找到目标元素，等待加载或检查选择器。');
@@ -97,9 +109,9 @@
                 // 处理不同类型的变动
                 if (mutation.type === 'childList') {
                     // 获取最新的值，例如目标元素内部的文本
-                    handleValueChange();
+                    handleValueChange(targetNode, symbol);
                 } else if (mutation.type === 'characterData') {
-                    handleValueChange();
+                    handleValueChange(targetNode, symbol);
                 }
                 // 可以根据需要添加对属性变化的处理 (mutation.type === 'attributes')
             }
@@ -109,16 +121,15 @@
         const observer = new MutationObserver(callback);
         observer.observe(targetNode, config);
         console.log('已开始监控目标元素的变动。');
-
-        // 处理值变化的函数
-        function handleValueChange() {
-            // 获取当前值（根据你的实际需求调整选择器）
-            const currentValue = targetNode.innerText || targetNode.textContent;
-            console.log('当前值变为:', currentValue);
-
-            GM_setValue(symbol, currentValue);
-            GM_setValue('dataSource', symbol);
-        }
     }
 
+    // 处理值变化的函数
+    function handleValueChange(targetNode, symbol) {
+        // 获取当前值（根据你的实际需求调整选择器）
+        const currentValue = targetNode.innerText || targetNode.textContent;
+        console.log('当前值变为:', currentValue);
+
+        GM_setValue(symbol, currentValue);
+        GM_setValue('dataSource', symbol);
+    }
 })();
