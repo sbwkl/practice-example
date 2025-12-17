@@ -45,11 +45,12 @@
             const au = GM_getValue('aum');
             const si = GM_getValue('silver');
             const ag = GM_getValue('agm');
-
+            const f518850 = Math.exp(Math.log(gc) + Math.log(usdcnh) - 8.1);
+            
             let b1 = au - gc * usdcnh / 31.1034768;
             let b2 = ag - si * usdcnh * 1000 / 31.1034768;
 
-            console.log('黄金基差: ', b1);
+            console.log(`黄金基差: `${b1}, 518850 < ${f518850});
             console.log('白银基差: ', b2);
 
             let title = '';
