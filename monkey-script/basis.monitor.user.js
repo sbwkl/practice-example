@@ -50,7 +50,7 @@
             let b1 = au - gc * usdcnh / 31.1034768;
             let b2 = ag - si * usdcnh * 1000 / 31.1034768;
 
-            console.log(`黄金基差: `${b1}, 518850 < ${f518850});
+            console.log(`黄金基差: ${b1}, 518850 < ${f518850}`);
             console.log('白银基差: ', b2);
 
             let title = '';
