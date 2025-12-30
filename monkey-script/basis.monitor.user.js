@@ -42,7 +42,7 @@
     const host = document.createElement('div');
     host.style.position = 'fixed';
     host.style.top = '10px';
-    host.style.right = '10px';
+    host.style.left = '10px';
     host.style.zIndex = '999999';
     document.body.appendChild(host);
 
@@ -132,8 +132,8 @@
                   border
                   row-key="symbol"
                 >
-                  <el-table-column prop="symbol" label="Symbol" width="90" />
-                  <el-table-column prop="price" label="Price" width="100" />
+                  <el-table-column prop="price" label="Basis" width="70" />
+                  <el-table-column prop="symbol" label="Symbol" width="70" />
                   <el-table-column prop="action" label="Action" />
                 </el-table>
               </div>
