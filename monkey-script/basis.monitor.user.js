@@ -3,6 +3,7 @@
 // @namespace   https://sbwkl.github.io/
 // @match       https://quote.eastmoney.com/*/*.html
 // @match       https://www.investing.com/*/*
+// @match       https://fu.minkabu.jp/*/*
 // @match       https://www.google.com/
 // @exclude     https://quote.eastmoney.com/newstatic/html/profitchart_new.html*
 // @grant       GM_setValue
@@ -33,6 +34,11 @@
       const targetNode = document.querySelector('.text-5xl\\/9');;
       startUploadData(targetNode, symbol);
     }, 10000);
+  } else if (currentUrl.startsWith("https://fu.minkabu.jp/")) {
+      var parts = currentUrl.split('/');
+      var symbol = parts[parts.length - 1];
+      const targetNode = document.querySelector('.text-4xl');;
+      startUploadData(targetNode, symbol);
   } else {
     console.log('unknow page.');
   }
@@ -54,7 +60,7 @@
     const style = document.createElement('style');
     style.textContent = `
         .panel {
-          width: 380px;
+          width: 500px;
           background: #fff;
           border-radius: 8px;
           box-shadow: 0 6px 16px rgba(0,0,0,.15);
@@ -95,13 +101,17 @@
       const App = {
         setup() {
           const rows = ref([
-            { symbol: 'AU', price: 'N/A', action: '' },
-            { symbol: 'AG', price: 'N/A', action: '' },
-            { symbol: 'PT', price: 'N/A', action: '' }
+            { symbol: 'AU - GC', price: 'N/A', action: '', p95: '-13, 11' },
+            { symbol: 'AG - SI', price: 'N/A', action: '', p95: '-122, 630' },
+            { symbol: 'PT - PL', price: 'N/A', action: '', p95: ', 100' },
+            { symbol: 'AU - XAU', price: 'N/A', action: '', p95: '0, 54' },
+            { symbol: 'AG - XAG', price: 'N/A', action: '', p95: '-0.4, 0.8' },
+            { symbol: 'OSE - GC', price: 'N/A', action: '', p95: '-34, 70' }
           ]);
 
           GM_addValueChangeListener('dataSource', (name, oldVal, newVal, remote) => {
             const usdcnh = GM_getValue('USDCNH');
+            const usdjpy = GM_getValue('USDJPY');
             const gc = Number(GM_getValue('gold').replace(/,/g, ''));
             const au = GM_getValue('aum');
             const si = GM_getValue('silver');
@@ -109,16 +119,25 @@
             const f518850 = (Math.exp(Math.log(gc) + Math.log(usdcnh) - 8.1)).toFixed(3);
             const pt = GM_getValue('ptm');
             const PL = Number(GM_getValue('platinum').replace(/,/g, ''));
+            const xau = Number(GM_getValue('xau-usd').replace(/,/g, ''));
+            const xag = GM_getValue('xag-usd');
+            const tgold = Number(GM_getValue('tgold').replace(/,/g, ''));
 
             let b1 = (au - gc * usdcnh / 31.1034768).toFixed(2);
             let b2 = (ag - si * usdcnh * 1000 / 31.1034768).toFixed(2);
             let b3 = (pt - PL * usdcnh / 31.1034768).toFixed(2);
+            let b4 = (gc - xau).toFixed(2);
+            let b5 = (si - xag).toFixed(2);
+            let b6 = (tgold / usdjpy * 31.1034768 - xau).toFixed(2);
 
             rows.value[0].price = b1;
             rows.value[0].action = `518850 < ${f518850}`
 
             rows.value[1].price = b2;
             rows.value[2].price = b3;
+            rows.value[3].price = b4;
+            rows.value[4].price = b5;
+            rows.value[5].price = b6;
           });
 
           return { rows };
@@ -133,8 +152,9 @@
                   row-key="symbol"
                 >
                   <el-table-column prop="price" label="Basis" width="70" />
-                  <el-table-column prop="symbol" label="Symbol" width="70" />
-                  <el-table-column prop="action" label="Action" />
+                  <el-table-column prop="symbol" label="Symbol" width="100" />
+                  <el-table-column prop="action" label="Action" width="150" />
+                  <el-table-column prop="p95" label="95%" />
                 </el-table>
               </div>
             `
