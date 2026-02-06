@@ -9,6 +9,7 @@
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_addValueChangeListener
+// @grant       GM_listValues
 // @version     1.0
 // @author      sbwkl
 // @downloadURL https://raw.githubusercontent.com/sbwkl/practice-example/refs/heads/master/monkey-script/basis.monitor.user.js
@@ -60,7 +61,6 @@
     const style = document.createElement('style');
     style.textContent = `
         .panel {
-          width: 500px;
           background: #fff;
           border-radius: 8px;
           box-shadow: 0 6px 16px rgba(0,0,0,.15);
@@ -101,43 +101,55 @@
       const App = {
         setup() {
           const rows = ref([
-            { symbol: 'AU - GC', price: 'N/A', action: '', p95: '-13, 11' },
-            { symbol: 'AG - SI', price: 'N/A', action: '', p95: '-122, 630' },
-            { symbol: 'PT - PL', price: 'N/A', action: '', p95: ', 100' },
-            { symbol: 'AU - XAU', price: 'N/A', action: '', p95: '0, 54' },
-            { symbol: 'AG - XAG', price: 'N/A', action: '', p95: '-0.4, 0.8' },
-            { symbol: 'OSE - GC', price: 'N/A', action: '', p95: '-34, 70' }
+            { expr1: 'aum - gold * USDCNH / 31.1034768',  price: 'N/A', ratio: 'N/A', action: '', p95: '￥(-13, 12)/g', expr2: 'aum / (gold * USDCNH / 31.1034768)'},
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '￥(-122, 630)/kg',
+              expr1: 'agm - silver * USDCNH * 1000 / 31.1034768',
+              expr2: 'agm / (silver * USDCNH * 1000 / 31.1034768)',
+              expr3: 'Math.exp(0.1311) * (silver * USDCNH * 1000 / 31.1034768)'
+            },
+            { expr1: 'ptm - platinum * USDCNH / 31.1034768',  price: 'N/A', ratio: 'N/A', action: '', p95: ', 100' , expr2: 'ptm / (platinum * USDCNH / 31.1034768)'},
+            { expr1: 'gold - xau_usd', price: 'N/A', ratio: 'N/A', action: '', p95: '$(0, 54)/oz' , expr2: 'gold / xau_usd'},
+            { expr1: 'silver - xag_usd', price: 'N/A', ratio: 'N/A', action: '', p95: '$(-0.4, 0.8)/oz' , expr2: 'silver / xag_usd'},
+            { expr1: 'tgold / USDJPY - xau_usd / 31.1034768', price: 'N/A', ratio: 'N/A', action: '', p95: '$(-1.1, 2.23)/g' , expr2: '(tgold / USDJPY) / (xau_usd / 31.1034768)'}
           ]);
 
+          const cache = new Map();
+
+          function evalExpr(expr, ctx) {
+            if (!cache.has(expr)) {
+              cache.set(
+                expr,
+                new Function("ctx", `
+                  ${Object.keys(ctx).map(k => `const ${k} = ctx.${k};`).join('\n')}
+                  return ${expr};
+                `)
+              );
+            }
+            return cache.get(expr)(ctx);
+          }
+
           GM_addValueChangeListener('dataSource', (name, oldVal, newVal, remote) => {
-            const usdcnh = GM_getValue('USDCNH');
-            const usdjpy = GM_getValue('USDJPY');
-            const gc = Number(GM_getValue('gold').replace(/,/g, ''));
-            const au = GM_getValue('aum');
-            const si = GM_getValue('silver');
-            const ag = GM_getValue('agm');
-            const f518850 = (Math.exp(Math.log(gc) + Math.log(usdcnh) - 8.1)).toFixed(3);
-            const pt = GM_getValue('ptm');
-            const PL = Number(GM_getValue('platinum').replace(/,/g, ''));
-            const xau = Number(GM_getValue('xau-usd').replace(/,/g, ''));
-            const xag = GM_getValue('xag-usd');
-            const tgold = Number(GM_getValue('tgold').replace(/,/g, ''));
 
-            let b1 = (au - gc * usdcnh / 31.1034768).toFixed(2);
-            let b2 = (ag - si * usdcnh * 1000 / 31.1034768).toFixed(2);
-            let b3 = (pt - PL * usdcnh / 31.1034768).toFixed(2);
-            let b4 = (gc - xau).toFixed(2);
-            let b5 = (si - xag).toFixed(2);
-            let b6 = (tgold / usdjpy * 31.1034768 - xau).toFixed(2);
+            const ctx = {};
+            GM_listValues().filter(k => k !== '').forEach(k => {
+              let _k = k.replace(/[^a-zA-Z0-9]/g, '_');
+              _k = _k.replace(/^var$/g, '_var');
+              ctx[_k] = Number(GM_getValue(k).replace(/,/g, ''));
+            });
 
-            rows.value[0].price = b1;
-            rows.value[0].action = `518850 < ${f518850}`
+            // console.log('change...', ctx);
 
-            rows.value[1].price = b2;
-            rows.value[2].price = b3;
-            rows.value[3].price = b4;
-            rows.value[4].price = b5;
-            rows.value[5].price = b6;
+            for (const row of rows.value) {
+              row.price = evalExpr(row.expr1, ctx).toFixed(2);
+              row.ratio = Math.log(evalExpr(row.expr2, ctx)).toFixed(4);
+
+              if (row.expr3) {
+                row.action = evalExpr(row.expr3, ctx).toFixed(2);
+              }
+
+            }
+
           });
 
           return { rows };
@@ -151,10 +163,34 @@
                   border
                   row-key="symbol"
                 >
-                  <el-table-column prop="price" label="Basis" width="70" />
-                  <el-table-column prop="symbol" label="Symbol" width="100" />
-                  <el-table-column prop="action" label="Action" width="150" />
-                  <el-table-column prop="p95" label="95%" />
+                  <el-table-column prop="price" label="a-b" width="70" />
+                  <el-table-column prop="ratio" label="a/b" width="70" />
+                  <el-table-column prop="action" label="action" width="80" />
+                  <el-table-column prop="p95" label="95%" width="150"/>
+                  <el-table-column prop="expr1" label="a-b expr" width="300" >
+                    <template #default="{ row }">
+                      <el-input
+                        v-model="row.expr1"
+                        size="small"
+                      />
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="expr2" label="a/b expr" width="300" >
+                    <template #default="{ row }">
+                      <el-input
+                        v-model="row.expr2"
+                        size="small"
+                      />
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="expr3" label="expr3" width="300" >
+                    <template #default="{ row }">
+                      <el-input
+                        v-model="row.expr3"
+                        size="small"
+                      />
+                    </template>
+                  </el-table-column>
                 </el-table>
               </div>
             `
