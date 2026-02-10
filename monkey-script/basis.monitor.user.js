@@ -10,6 +10,7 @@
 // @grant       GM_getValue
 // @grant       GM_addValueChangeListener
 // @grant       GM_listValues
+// @grant       GM_addStyle
 // @version     1.0
 // @author      sbwkl
 // @downloadURL https://raw.githubusercontent.com/sbwkl/practice-example/refs/heads/master/monkey-script/basis.monitor.user.js
@@ -101,17 +102,73 @@
       const App = {
         setup() {
           const rows = ref([
-            { expr1: 'aum - gold * USDCNH / 31.1034768',  price: 'N/A', ratio: 'N/A', action: '', p95: '￥(-13, 12)/g', expr2: 'aum / (gold * USDCNH / 31.1034768)'},
             {
-              price: 'N/A', ratio: 'N/A', action: '', p95: '￥(-122, 630)/kg',
-              expr1: 'agm - silver * USDCNH * 1000 / 31.1034768',
-              expr2: 'agm / (silver * USDCNH * 1000 / 31.1034768)',
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(-13, 12)', p95Ratio: '',
+              expr1: 'aum',
+              expr2: 'gold * USDCNH / 31.1034768'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(-1.1, 3.82)' , p95Ratio: '(-0.0132, 0.0264)',
+              expr1: 'tgold_mini / USDJPY',
+              expr2: 'gold / 31.1034768',
+              expr3: '(gold / 31.1034768 + 7.5) * USDJPY + 100'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '' , p95Ratio: '',
+              expr1: 'tgold_mini / CNHJPY',
+              expr2: 'aum'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(-122, 1646)', p95Ratio: '(-0.0167, 0.1225)',
+              expr1: 'agm',
+              expr2: 'silver * USDCNH * 1000 / 31.1034768',
               expr3: 'Math.exp(0.1311) * (silver * USDCNH * 1000 / 31.1034768)'
             },
-            { expr1: 'ptm - platinum * USDCNH / 31.1034768',  price: 'N/A', ratio: 'N/A', action: '', p95: ', 100' , expr2: 'ptm / (platinum * USDCNH / 31.1034768)'},
-            { expr1: 'gold - xau_usd', price: 'N/A', ratio: 'N/A', action: '', p95: '$(0, 54)/oz' , expr2: 'gold / xau_usd'},
-            { expr1: 'silver - xag_usd', price: 'N/A', ratio: 'N/A', action: '', p95: '$(-0.4, 0.8)/oz' , expr2: 'silver / xag_usd'},
-            { expr1: 'tgold / USDJPY - xau_usd / 31.1034768', price: 'N/A', ratio: 'N/A', action: '', p95: '$(-1.1, 2.23)/g' , expr2: '(tgold / USDJPY) / (xau_usd / 31.1034768)'}
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '', p95Ratio: '',
+              expr1: 'tsilver * 1000 / USDJPY',
+              expr2: 'silver * 1000 / 31.1034768'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '', p95Ratio: '',
+              expr1: 'tsilver * 1000 / CNHJPY',
+              expr2: 'agm'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: ', 100' , p95Ratio: '',
+              expr1: 'ptm',
+              expr2: 'platinum * USDCNH / 31.1034768'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(-5, 0)' , p95Ratio: '',
+              expr1: 'tplatinum / USDJPY',
+              expr2: 'platinum / 31.1034768'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '' , p95Ratio: '',
+              expr1: 'tplatinum / CNHJPY',
+              expr2: 'ptm'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(0, 54)' , p95Ratio: '',
+              expr1: 'gold', expr2: 'xau_usd'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(-0.4, 0.8)', p95Ratio: '',
+              expr1: 'silver', expr2: 'xag_usd'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(3, 6)', p95Ratio: '',
+              expr1: 'brent_oil', expr2: 'crude_oil'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(-29, 89)', p95Ratio: '(-0.0562, 0.2224)',
+              expr1: 'scm', expr2: 'crude_oil * USDCNH'
+            },
+            {
+              price: 'N/A', ratio: 'N/A', action: '', p95: '(-271, 400)', p95Ratio: '(-0.0618, 0.1332)',
+              expr1: 'lum', expr2: 'crude_oil * USDCNH * 7.6'
+            }
           ]);
 
           const cache = new Map();
@@ -135,14 +192,18 @@
             GM_listValues().filter(k => k !== '').forEach(k => {
               let _k = k.replace(/[^a-zA-Z0-9]/g, '_');
               _k = _k.replace(/^var$/g, '_var');
+              _k = _k.replace(/^(\d)/, "_$1");
               ctx[_k] = Number(GM_getValue(k).replace(/,/g, ''));
             });
 
             // console.log('change...', ctx);
+            // console.log(Object.keys(ctx).map(k => `const ${k} = ctx.${k};`).join('\n'));
 
             for (const row of rows.value) {
-              row.price = evalExpr(row.expr1, ctx).toFixed(2);
-              row.ratio = Math.log(evalExpr(row.expr2, ctx)).toFixed(4);
+              const a = evalExpr(row.expr1, ctx);
+              const b = evalExpr(row.expr2, ctx);
+              row.price = (a - b).toFixed(2);
+              row.ratio = Math.log(a / b).toFixed(4);
 
               if (row.expr3) {
                 row.action = evalExpr(row.expr3, ctx).toFixed(2);
@@ -159,15 +220,15 @@
                 <el-table
                   :data="rows"
                   size="small"
-                  height="260"
                   border
                   row-key="symbol"
                 >
                   <el-table-column prop="price" label="a-b" width="70" />
                   <el-table-column prop="ratio" label="a/b" width="70" />
                   <el-table-column prop="action" label="action" width="80" />
-                  <el-table-column prop="p95" label="95%" width="150"/>
-                  <el-table-column prop="expr1" label="a-b expr" width="300" >
+                  <el-table-column prop="p95" label="95% a-b" width="100"/>
+                  <el-table-column prop="p95Ratio" label="95% a/b" width="120"/>
+                  <el-table-column prop="expr1" label="expr a" width="200" >
                     <template #default="{ row }">
                       <el-input
                         v-model="row.expr1"
@@ -175,7 +236,7 @@
                       />
                     </template>
                   </el-table-column>
-                  <el-table-column prop="expr2" label="a/b expr" width="300" >
+                  <el-table-column prop="expr2" label="expr b" width="200" >
                     <template #default="{ row }">
                       <el-input
                         v-model="row.expr2"
@@ -244,7 +305,7 @@
   function handleValueChange(targetNode, symbol) {
     // 获取当前值（根据你的实际需求调整选择器）
     const currentValue = targetNode.innerText || targetNode.textContent;
-    console.log('当前值变为:', currentValue);
+    console.log(symbol, '当前值变为:', currentValue);
 
     GM_setValue(symbol, currentValue);
     GM_setValue('dataSource', symbol);
