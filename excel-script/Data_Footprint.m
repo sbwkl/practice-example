@@ -1,7 +1,10 @@
 let
-    Source = Excel.Workbook(File.Contents("E:\ETF 拯救世界\Market-Data-Stock.xlsx"), null, true),
-    BarSheet = Source{[Item="Market_Data_Stock", Kind="Sheet"]}[Data],
-    Sorted = Table.PromoteHeaders(BarSheet, [PromoteAllScalars=true]),
+    StockWorkbook = Excel.Workbook(File.Contents("E:\ETF 拯救世界\Market-Data-Stock.xlsx"), null, true),
+    StockSheet = StockWorkbook{[Item="Market_Data_Stock", Kind="Sheet"]}[Data],
+    MarketDataStock = Table.PromoteHeaders(StockSheet, [PromoteAllScalars=true]),
+
+    CodeList = {"159920", "512980", "159938", "513180", "513050", "512880", "515180", "513500", "512660", "162411"},
+    GirdStock = Table.SelectColumns(MarketDataStock, {"date"} & CodeList),
 
     DataTradeRaw = Excel.CurrentWorkbook(){[Name="Data_Trade"]}[Content],
     DataTrade = Table.TransformColumnTypes(DataTradeRaw, {{"买入日期", type date}, {"卖出日期", type date}}),
@@ -16,10 +19,9 @@ let
             Renamed = Table.RenameColumns(RemoveTemp, {{"买入价格", "买入" & TargetCode}, {"卖出价格", "卖出" & TargetCode}})
         in
             Renamed,
-    CodeList = {"159920", "512980", "159938", "513180", "513050", "512880", "515180", "513500", "512660", "162411"},
     Merged = List.Accumulate(
         CodeList, 
-        Sorted, 
+        GirdStock, 
         (state, current) => MergeTrade(state, current)
     ),
     Final = Table.RenameColumns(Merged, {
