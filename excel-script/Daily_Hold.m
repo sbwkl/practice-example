@@ -34,17 +34,30 @@ let
     
     Typed_Trade = Combined_Trade,
     
-    // 2. 加载市场数据
+    // 2. 加载市场数据 & 优化填充
     Source_Market = LoadTable("Market-Data-Fund", "Market_Data"),
-    Unpivoted_Market_Raw = Table.UnpivotOtherColumns(Source_Market, {"date"}, "代码", "NetValue"),
+    
+    // 2.1 确保按日期升序排序，以便 FillDown 生效
+    Sorted_Market = Table.Sort(Source_Market, {{"date", Order.Ascending}}),
+    
+    // 2.2 获取所有基金列名 (排除 date 列)
+    Fund_Columns = List.RemoveItems(Table.ColumnNames(Sorted_Market), {"date"}),
+    
+    // 2.3 向下填充 (核心优化：在宽表状态下直接填充，避免生成笛卡尔积)
+    Filled_Wide_Market = Table.FillDown(Sorted_Market, Fund_Columns),
+    
+    // 2.4 逆透视并过滤日期
+    Unpivoted_Market_Raw = Table.UnpivotOtherColumns(Filled_Wide_Market, {"date"}, "代码", "NetValue"),
     Filtered_Market = Table.SelectRows(Unpivoted_Market_Raw, each [date] >= #date(2015, 1, 1)),
 
     // 3. 处理 XJ (现金)
-    AllDates = List.Distinct(Filtered_Market[date]),
+    All_Dates = List.Distinct(Filtered_Market[date]),
     XJ_Table = Table.FromColumns(
-        {AllDates, List.Repeat({"XJ"}, List.Count(AllDates)), List.Repeat({1}, List.Count(AllDates))}, 
+        {All_Dates, List.Repeat({"XJ"}, List.Count(All_Dates)), List.Repeat({1}, List.Count(All_Dates))}, 
         {"date", "代码", "NetValue"}
     ),
+    
+    // 4. 合并基金行情 + 现金行情
     Unpivoted_Market = Table.Combine({Filtered_Market, XJ_Table}),
 
     // 4. 处理交易数据聚合
