@@ -1,48 +1,88 @@
 let
-    // 1. 处理市场数据：逆透视宽表
-    Source_Market = LoadTable("Market-Data-Fund", "Market_Data"),
-    Unpivoted_Market = Table.UnpivotOtherColumns(Source_Market, {"date"}, "代码", "NetValue"),
-
-    // 2. 处理交易数据
+    // 取得交易数据
     Source_Trade = Excel.CurrentWorkbook(){[Name="Data_Roll"]}[Content],
-    
-    // 【关键改动】修正符号：将符号颠倒，买入变为正数，卖出变为负数
-    Correct_Sign = Table.TransformColumns(Source_Trade, {
-        {"份额", each _ * -1, type number}
+    Typed_Source = Table.TransformColumnTypes(Source_Trade, {{"交易时间", type date}, {"份额", type number}, {"金额", type number}}),
+
+    // 分离 现金(XJ) 与 基金交易
+    Rows_XJ = Table.SelectRows(Typed_Source, each [代码] = "XJ"),
+    Rows_Fund = Table.SelectRows(Typed_Source, each [代码] <> "XJ"),
+
+    // 1. 处理基金交易：修正符号 (买入=正, 卖出=负)
+    // 假设原始数据中 买入是负数，所以乘以 -1 变正
+    Rows_Fund_Corrected = Table.TransformColumns(Rows_Fund, {
+        {"份额", each _ * -1, type number},
+        {"金额", each _ * -1, type number}
+    }),
+
+    // 2. 生成基金交易对应的现金流变动
+    // 买入基金(金额>0) -> 现金减少; 卖出基金(金额<0) -> 现金增加
+    // 所以现金变动 = 金额 * -1
+    Cash_Flow_From_Fund = Table.SelectColumns(Rows_Fund_Corrected, {"交易时间", "金额"}),
+    Cash_Side_Records = Table.TransformColumns(Cash_Flow_From_Fund, {{"金额", each _ * -1, type number}}),
+    Cash_Side_Final = Table.RenameColumns(
+        Table.AddColumn(Cash_Side_Records, "代码", each "XJ"), 
+        {{"金额", "份额"}}
+    ),
+
+    // 3. 合并所有记录：修正后的基金记录 + 生成的现金流 + 原始现金存取(XJ)
+    // 注意：Project/SelectColumn 可能会丢失其他列，但在后续 GroupBy 中只用到 时间、代码、份额
+    Combined_Trade = Table.Combine({
+        Table.SelectColumns(Rows_Fund_Corrected, {"交易时间", "代码", "份额"}),
+        Table.SelectColumns(Cash_Side_Final, {"交易时间", "代码", "份额"}),
+        Table.SelectColumns(Rows_XJ, {"交易时间", "代码", "份额"})
     }),
     
-    // 强制转换数据类型
-    Typed_Trade = Table.TransformColumnTypes(Correct_Sign, {{"交易时间", type date}}),
+    Typed_Trade = Combined_Trade,
     
-    Grouped_Trade = Table.Group(Typed_Trade, {"代码"}, {
-        "AllData", (t) => 
+    // 2. 加载市场数据
+    Source_Market = LoadTable("Market-Data-Fund", "Market_Data"),
+    Unpivoted_Market_Raw = Table.UnpivotOtherColumns(Source_Market, {"date"}, "代码", "NetValue"),
+    Filtered_Market = Table.SelectRows(Unpivoted_Market_Raw, each [date] >= #date(2015, 1, 1)),
+
+    // 3. 处理 XJ (现金)
+    AllDates = List.Distinct(Filtered_Market[date]),
+    XJ_Table = Table.FromColumns(
+        {AllDates, List.Repeat({"XJ"}, List.Count(AllDates)), List.Repeat({1}, List.Count(AllDates))}, 
+        {"date", "代码", "NetValue"}
+    ),
+    Unpivoted_Market = Table.Combine({Filtered_Market, XJ_Table}),
+
+    // 4. 处理交易数据聚合
+    Grouped_Daily_Trade = Table.Group(Typed_Trade, {"交易时间", "代码"}, {
+        {"DailyChange", each List.Sum([份额]), type number}
+    }),
+
+    // 5. 合并与计算
+    Merged_Data = Table.NestedJoin(Unpivoted_Market, {"date", "代码"}, Grouped_Daily_Trade, {"交易时间", "代码"}, "TradeDetails", JoinKind.LeftOuter),
+    Expanded_Trade = Table.ExpandTableColumn(Merged_Data, "TradeDetails", {"DailyChange"}),
+    
+    Sorted_For_Calc = Table.Sort(Expanded_Trade, {{"代码", Order.Ascending}, {"date", Order.Ascending}}),
+    Replace_Nulls = Table.ReplaceValue(Sorted_For_Calc, null, 0, Replacer.ReplaceValue, {"DailyChange"}),
+
+    // 6. 优化点2: 使用 List.Generate 替代 O(N^2) 的求和
+    Grouped_For_RunningTotal = Table.Group(Replace_Nulls, {"代码"}, {
+        {"AllData", (t) => 
             let
-                // 按 交易时间 排序
-                Sorted = Table.Sort(t, {{"交易时间", Order.Ascending}}),
-                AddedIndex = Table.AddIndexColumn(Sorted, "Index", 1, 1),
-                // 计算累计持仓量 (此时份额已经是符号修正后的了)
-                AddRunningTotal = Table.AddColumn(AddedIndex, "Holdings", each List.Sum(List.FirstN(AddedIndex[份额], [Index])))
+                Changes = t[DailyChange],
+                // 高性能累加算法
+                RunningTotal = List.Generate(
+                    () => [i = 0, sum = Changes{0}],
+                    each [i] < List.Count(Changes),
+                    each [i = [i] + 1, sum = [sum] + Changes{i}],
+                    each [sum]
+                ),
+                Result = Table.FromColumns(
+                    Table.ToColumns(t) & {RunningTotal},
+                    Table.ColumnNames(t) & {"Holdings"}
+                )
             in
-                AddRunningTotal
+                Result
+        }
     }),
-    Expanded_Trade = Table.ExpandTableColumn(Grouped_Trade, "AllData", {"交易时间", "Holdings"}),
-
-    // 3. 合并市场价与持仓量
-    Merged_Data = Table.NestedJoin(Unpivoted_Market, {"date", "代码"}, Expanded_Trade, {"交易时间", "代码"}, "TradeDetails", JoinKind.LeftOuter),
-    Expanded_Holdings = Table.ExpandTableColumn(Merged_Data, "TradeDetails", {"Holdings"}),
-
-    // 4. 按标的分组并向下填充 (补全非交易日的持仓)
-    Sorted_For_Fill = Table.Sort(Expanded_Holdings, {{"代码", Order.Ascending}, {"date", Order.Ascending}}),
-    Grouped_For_Fill = Table.Group(Sorted_For_Fill, {"代码"}, {
-        "Filled", each Table.FillDown(_, {"Holdings"})
-    }),
-    Final_Long_Table = Table.ExpandTableColumn(Grouped_For_Fill, "Filled", {"date", "NetValue", "Holdings"}),
-
-    // 5. 计算每日市值并汇总
-    Replace_Nulls = Table.ReplaceValue(Final_Long_Table, null, 0, Replacer.ReplaceValue, {"Holdings"}),
-    Add_MarketValue = Table.AddColumn(Replace_Nulls, "MarketValue", each [Holdings] * [NetValue], type number),
     
-    // 生成最终的组合每日市值表
-    Data_Net = Table.Group(Add_MarketValue, {"date"}, {{"Portfolio_Net_Value", each List.Sum([MarketValue]), type number}})
+    Expanded_RunningTotal = Table.ExpandTableColumn(Grouped_For_RunningTotal, "AllData", {"date", "NetValue", "Holdings"}),
+    Add_MarketValue = Table.AddColumn(Expanded_RunningTotal, "MarketValue", each [Holdings] * [NetValue], type number),
+    Data_Net = Table.Group(Add_MarketValue, {"date"}, {{"Portfolio_Net_Value", each List.Sum([MarketValue]), type number}}),
+    Sorted_Result = Table.Sort(Data_Net, {{"date", Order.Descending}})
 in
-    Data_Net
+    Sorted_Result
