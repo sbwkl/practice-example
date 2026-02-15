@@ -20,10 +20,10 @@ let
     WarehouseWorkbook = Excel.Workbook(File.Contents(WarehousePath), null, true),
 
     // 3. 提取基金基础信息表 (fund sheet)
-    FundBaseInfo = WarehouseWorkbook{[Item="Data_Fund", Kind="Sheet"]}[Data],
+    FundBaseInfo = WarehouseWorkbook{[Item="Data_Symbol", Kind="Sheet"]}[Data],
     FundBaseTable = Table.PromoteHeaders(FundBaseInfo, [PromoteAllScalars=true]),
     
-    SheetData = WarehouseWorkbook{[Item="Market_Data_Fund", Kind="Sheet"]}[Data],
+    SheetData = WarehouseWorkbook{[Item="Market_Data", Kind="Sheet"]}[Data],
     FundMarketData = Table.PromoteHeaders(SheetData, [PromoteAllScalars=true]),
     // FundMarketData = Table.Buffer(PromotedData),
 
@@ -52,7 +52,7 @@ let
     // 5. 开始合并数据
     // A. 关联基础行信息 (从 fund 表里匹配对应的行)
     JoinBaseInfo = Table.NestedJoin(Grouped, {"代码"}, FundBaseTable, {"代码"}, "BaseDetails", JoinKind.LeftOuter),
-    ExpandedBase = Table.ExpandTableColumn(JoinBaseInfo, "BaseDetails", {"基金", "一级", "二级", "三级"}),
+    ExpandedBase = Table.ExpandTableColumn(JoinBaseInfo, "BaseDetails", {"名称", "一级", "二级", "三级"}),
 
     // B. 调用函数获取最新净值
     AddNavColumn = Table.AddColumn(ExpandedBase, "最新净值", each GetLatestNav(Text.From([代码]))),
@@ -63,7 +63,7 @@ let
             代码 = "XJ", 
             份数 = List.Sum(Source[份数]),
             份额 = (List.Sum(Source[金额]) - List.Sum(Source[手续费])),
-            基金 = "现金",
+            名称 = "现金",
             一级 = "货币",
             二级 = "货币",
             三级 = "货币",
@@ -73,11 +73,11 @@ let
     AddPosColumn = Table.AddColumn(AddCashRow, "持仓", each Number.Round([份额] * [最新净值], 2)),
     TotalHold = List.Sum(AddPosColumn[持仓]),
     AddPercent = Table.AddColumn(AddPosColumn, "占比", each [持仓] / TotalHold, Percentage.Type),
-    Reranked = Table.SelectColumns(AddPercent, {"代码", "基金", "份数", "份额", "最新净值", "持仓", "占比", "一级", "二级", "三级"}),
+    Reranked = Table.SelectColumns(AddPercent, {"代码", "名称", "份数", "份额", "最新净值", "持仓", "占比", "一级", "二级", "三级"}),
     SortByHold = Table.Sort(Reranked, {{"持仓", Order.Descending}}),
     TotalRow = Table.FromRecords({[
         代码 = "Total",
-        基金 = "汇总合计",
+        名称 = "汇总合计",
         份数 = List.Sum(SortByHold[份数]),
         份额 = "",
         最新净值 = "",
