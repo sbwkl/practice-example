@@ -35,10 +35,19 @@ let
     Typed_Trade = Combined_Trade,
     
     // 2. 加载市场数据 & 优化填充
+    
+    // --- 【优化】只加载实际交易过的基金，减少无用列 ---
+    RelevantCodes = List.Distinct(Typed_Trade[代码]),
+    
     Source_Market = LoadTable("Market-Data-Fund", "Market_Data"),
     
+    // 过滤列：只保留日期和相关基金
+    MarketColumns = Table.ColumnNames(Source_Market),
+    KeepColumns = {"date"} & List.Intersect({MarketColumns, RelevantCodes}),
+    Pruned_Market = Table.SelectColumns(Source_Market, KeepColumns),
+    
     // 2.1 确保按日期升序排序，以便 FillDown 生效
-    Sorted_Market = Table.Sort(Source_Market, {{"date", Order.Ascending}}),
+    Sorted_Market = Table.Sort(Pruned_Market, {{"date", Order.Ascending}}),
     
     // 2.2 获取所有基金列名 (排除 date 列)
     Fund_Columns = List.RemoveItems(Table.ColumnNames(Sorted_Market), {"date"}),
@@ -94,7 +103,11 @@ let
     }),
     
     Expanded_RunningTotal = Table.ExpandTableColumn(Grouped_For_RunningTotal, "AllData", {"date", "NetValue", "Holdings"}),
-    Add_MarketValue = Table.AddColumn(Expanded_RunningTotal, "MarketValue", each [Holdings] * [NetValue], type number),
+    
+    // --- 【优化】过滤掉持仓为 0 的记录 ---
+    Filtered_Holdings = Table.SelectRows(Expanded_RunningTotal, each Number.Abs([Holdings]) > 0.000001), 
+
+    Add_MarketValue = Table.AddColumn(Filtered_Holdings, "MarketValue", each [Holdings] * [NetValue], type number),
     Data_Net = Table.Group(Add_MarketValue, {"date"}, {{"Portfolio_Net_Value", each List.Sum([MarketValue]), type number}}),
     Sorted_Result = Table.Sort(Data_Net, {{"date", Order.Descending}})
 in
