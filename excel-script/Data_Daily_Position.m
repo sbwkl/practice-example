@@ -86,7 +86,8 @@ let
     MarketColumns = Table.ColumnNames(Source_Market),
     KeepColumns = {"date"} & List.Intersect({MarketColumns, FundCodes}),
     Pruned_Market = Table.SelectColumns(Source_Market, KeepColumns),
-    Sorted_Market = Table.Sort(Pruned_Market, {{"date", Order.Ascending}}),
+    Filtered_Market = Table.SelectRows(Pruned_Market, each [date] >= #date(2015, 1, 1)),
+    Sorted_Market = Table.Sort(Filtered_Market, {{"date", Order.Ascending}}),
 
     // ========== 4. 单次 Join: 宽表市场数据 + 宽表持仓 ==========
     Joined = Table.NestedJoin(Sorted_Market, {"date"}, Renamed_Holdings, {"date"}, "CumData", JoinKind.LeftOuter),
@@ -98,25 +99,18 @@ let
     NoNulls = Table.ReplaceValue(Filled, null, 0, Replacer.ReplaceValue, HoldingsColNames),
 
     // ========== 5. 计算每日持仓金额 = 累计份额 × 当日净值 ==========
-    // 基金: MarketValue = 净值 × 持仓份额
-    WithFundMV = List.Accumulate(
-        FundCodes,
-        NoNulls,
-        (tbl, code) => Table.AddColumn(
-            tbl, code & "_MV",
-            each Record.Field(_, code) * Record.Field(_, code & "_H"),
-            type number
+    // 一次 AddColumn 生成 Record, 每个基金一个字段 = 净值 × 份额, XJ = 余额
+    WithMV_Record = Table.AddColumn(NoNulls, "MV", each
+        Record.FromList(
+            List.Transform(FundCodes, (code) => Record.Field(_, code) * Record.Field(_, code & "_H"))
+                & { Record.Field(_, "XJ_H") },   // XJ 净值恒为1, 市值=余额
+            FundCodes & {"XJ"}
         )
     ),
-    // XJ: MarketValue = Holdings (净值恒为1)
-    WithXJ_MV = Table.RenameColumns(WithFundMV, {{"XJ_H", "XJ"}}),
 
-    // ========== 6. 精简列: 只保留 date + 各品种市值 + XJ ==========
-    FundMVCols = List.Transform(FundCodes, each _ & "_MV"),
-    Selected = Table.SelectColumns(WithXJ_MV, {"date"} & FundMVCols & {"XJ"}),
-    // 去掉 _MV 后缀, 列名直接用代码
-    FinalRenameMap = List.Transform(FundCodes, each {_ & "_MV", _}),
-    Renamed_Final = Table.RenameColumns(Selected, FinalRenameMap),
+    // ========== 6. 展开为最终列: date + 各品种市值 + XJ ==========
+    Expanded_MV = Table.ExpandRecordColumn(WithMV_Record, "MV", FundCodes & {"XJ"}),
+    Renamed_Final = Table.SelectColumns(Expanded_MV, {"date"} & FundCodes & {"XJ"}),
 
     // ========== 7. 排序输出 ==========
     Sorted_Result = Table.Sort(Renamed_Final, {{"date", Order.Descending}})
