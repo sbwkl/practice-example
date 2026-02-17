@@ -108,7 +108,66 @@ let
     Filtered_Holdings = Table.SelectRows(Expanded_RunningTotal, each Number.Abs([Holdings]) > 0.000001), 
 
     Add_MarketValue = Table.AddColumn(Filtered_Holdings, "MarketValue", each [Holdings] * [NetValue], type number),
-    Data_Net = Table.Group(Add_MarketValue, {"date"}, {{"Portfolio_Net_Value", each List.Sum([MarketValue]), type number}}),
-    Sorted_Result = Table.Sort(Data_Net, {{"date", Order.Descending}})
+
+    // --- 【新增】关联一级分类 ---
+    // 1. 加载分类信息表
+    Source_Category = LoadTable("Market-Data-Fund", "Data_Symbol"),
+    Category_Info = Table.SelectColumns(Source_Category, {"代码", "一级"}),
+    
+    // 2. 获取所有可能的分类列表 (用于后续展开列)
+    // 加上 "货币" (XJ) 和 "未分类" (防止null)
+    All_Categories = List.Distinct(List.Combine({Category_Info[一级], {"货币", "未分类"}})),
+    
+    // 3. 合并分类信息
+    Joined_Category = Table.NestedJoin(Add_MarketValue, {"代码"}, Category_Info, {"代码"}, "CatData", JoinKind.LeftOuter),
+    
+    // 4. 展开并非空处理 (XJ -> 货币)
+    Expanded_Category = Table.AddColumn(Joined_Category, "Category", each 
+        if [代码] = "XJ" then "货币" 
+        else if Table.IsEmpty([CatData]) then "未分类" 
+        else Record.Field([CatData]{0}, "一级")
+    ),
+    
+    // 5. 按日期分组并计算各类汇总
+    Initial_Capital = 150000,
+    
+    // 构建展开用的列名列表：原始值列 + 占比列
+    Value_Column_Names = List.Transform(All_Categories, each _ & "（值）"),
+    All_Expand_Columns = List.Combine({Value_Column_Names, All_Categories}),
+    
+    Grouped_By_Date = Table.Group(Expanded_Category, {"date"}, {
+        // 计算组合累计净值：总市值 / 初始投入
+        {"Portfolio_Net_Value", each List.Sum([MarketValue]) / Initial_Capital, type number},
+        
+        {"Category_Details", (t) => 
+            let
+                Total_Market_Value = List.Sum(t[MarketValue]),
+                Safe_Total = if Total_Market_Value = 0 then 1 else Total_Market_Value,
+                
+                ByCat = Table.Group(t, {"Category"}, {{"SumVal", each List.Sum([MarketValue]), type number}}),
+                
+                // 原始值 Record: "xx（值）" -> 金额
+                Value_Keys = List.Transform(ByCat[Category], each _ & "（值）"),
+                Value_Record = Record.FromList(ByCat[SumVal], Value_Keys),
+                
+                // 占比 Record: "xx" -> 百分比
+                Cat_Percent = List.Transform(ByCat[SumVal], each _ / Safe_Total),
+                Percent_Record = Record.FromList(Cat_Percent, ByCat[Category]),
+                
+                // 合并两个 Record
+                Combined = Record.Combine({Value_Record, Percent_Record})
+            in
+                Combined
+        }
+    }),
+
+    // 6. 展开分类数据列
+    Expanded_Final = Table.ExpandRecordColumn(Grouped_By_Date, "Category_Details", All_Expand_Columns),
+    
+    // 7. 处理 null (某天没有某分类持仓)
+    Actual_Exp_Cols = List.Intersect({Table.ColumnNames(Expanded_Final), All_Expand_Columns}),
+    Replace_Null_Final = Table.ReplaceValue(Expanded_Final, null, 0, Replacer.ReplaceValue, Actual_Exp_Cols),
+
+    Sorted_Result = Table.Sort(Replace_Null_Final, {{"date", Order.Descending}})
 in
     Sorted_Result
