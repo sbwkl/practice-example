@@ -2,18 +2,10 @@ let
     Source = Excel.CurrentWorkbook(){[Name="Data_Roll"]}[Content],
     NonNull = Table.SelectRows(Source, each ([代码] <> null and [代码] <> "XJ")),
     Grouped = Table.Group(NonNull, {"代码"}, {
-        {"份数", each 
-            let
-                val = Number.Round(List.Sum([份数]), 2) * -1
-            in 
-                if val = 0 then 0 else val,
-            type number}, 
-        {"份额", each 
-            let
-                val = Number.Round(List.Sum([份额]), 2) * -1
-            in
-                if val = 0 then 0 else val, 
-            type number}
+        {"份数", each Number.Abs(Number.Round(List.Sum([份数]), 2)), type number}, 
+        {"份额", each Number.Abs(Number.Round(List.Sum([份额]), 2)), type number},
+        {"总投入", each Number.Round(List.Sum(List.Select([金额], each _ < 0)) * -1, 2), type number},
+        {"净投入", each Number.Round(List.Sum([金额]), 2), type number}
     }),
 
     WarehousePath = "E:\ETF 拯救世界\Market-Data-Fund.xlsx",
@@ -62,7 +54,9 @@ let
         {[
             代码 = "XJ", 
             份数 = List.Sum(Source[份数]),
-            份额 = (List.Sum(Source[金额]) - List.Sum(Source[手续费])),
+            份额 = (List.Sum(Source[金额])),
+            总投入 = 0,
+            净投入 = 0,
             名称 = "现金",
             一级 = "货币",
             二级 = "货币",
@@ -73,20 +67,32 @@ let
     AddPosColumn = Table.AddColumn(AddCashRow, "持仓", each Number.Round([份额] * [最新净值], 2)),
     TotalHold = List.Sum(AddPosColumn[持仓]),
     AddPercent = Table.AddColumn(AddPosColumn, "占比", each [持仓] / TotalHold, Percentage.Type),
-    Reranked = Table.SelectColumns(AddPercent, {"代码", "名称", "份数", "份额", "最新净值", "持仓", "占比", "一级", "二级", "三级"}),
+    
+    // Add Profit Columns
+    AddProfit = Table.AddColumn(AddPercent, "累计收益", each if [代码] = "XJ" then 0 else Number.Round([持仓] + [净投入], 2), type number),
+    AddProfitRate = Table.AddColumn(AddProfit, "累计收益率", each if [代码] = "XJ" or [总投入] = 0 then 0 else [累计收益] / [总投入], Percentage.Type),
+
+    Reranked = Table.SelectColumns(AddProfitRate, {"代码", "名称", "份数", "份额", "最新净值", "持仓", "占比", "累计收益", "累计收益率", "一级", "二级", "三级", "总投入"}),
     SortByHold = Table.Sort(Reranked, {{"持仓", Order.Descending}}),
+    
+    TotalProfit = List.Sum(SortByHold[累计收益]),
+    TotalInvest = List.Sum(SortByHold[总投入]),
+
     TotalRow = Table.FromRecords({[
         代码 = "Total",
         名称 = "汇总合计",
         份数 = List.Sum(SortByHold[份数]),
-        份额 = "",
-        最新净值 = "",
+        份额 = null,
+        最新净值 = null,
         持仓 = List.Sum(SortByHold[持仓]),
         占比 = List.Sum(SortByHold[占比]),
+        累计收益 = TotalProfit,
+        累计收益率 = if TotalInvest = 0 then 0 else TotalProfit / TotalInvest,
         一级 = "",
         二级 = "",
         三级 = ""
     ]}),
-    FinalResult = Table.Combine({SortByHold, TotalRow})
+    FinalResult = Table.Combine({Table.RemoveColumns(SortByHold, {"总投入"}), TotalRow}),
+    TypedResult = Table.TransformColumnTypes(FinalResult, {{"累计收益率", Percentage.Type}})
 in
-    FinalResult
+    TypedResult
