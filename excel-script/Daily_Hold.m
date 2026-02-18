@@ -36,7 +36,7 @@ let
     ),
 
     // ========== 3. 逐行计算: 总净值 + 分类值 + 分类占比 (纯列运算) ==========
-    Initial_Capital = 150000,
+    Initial_Capital = Settings[总金额],
     
     // 3a. 添加净值列
     Add_Total = Table.AddColumn(Typed, "净值", each 

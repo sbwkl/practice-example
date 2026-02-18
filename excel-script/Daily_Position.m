@@ -37,7 +37,7 @@ let
     }),
 
     // 2e. 在小表上 List.Generate 计算累计持仓 (XJ 初始 150000)
-    Initial_Capital = 150000,
+    Initial_Capital = Settings[总金额],
     Sorted_Trade = Table.Sort(Daily_Aggregated, {{"代码", Order.Ascending}, {"交易时间", Order.Ascending}}),
 
     Cumulative_Trade = Table.Group(Sorted_Trade, {"代码"}, {
