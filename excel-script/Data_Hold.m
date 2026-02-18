@@ -53,8 +53,8 @@ let
         Table.RowCount(AddNavColumn), 
         {[
             代码 = "XJ", 
-            份数 = List.Sum(Source[份数]),
-            份额 = (List.Sum(Source[金额])),
+            份数 = List.Sum(Source[份数]) + Settings[总份数],
+            份额 = List.Sum(Source[金额]) + Settings[总金额],
             总投入 = 0,
             净投入 = 0,
             名称 = "现金",
