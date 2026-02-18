@@ -11,33 +11,27 @@ let
     }),
 
     // ========== 2. 处理交易数据 (小表优先) ==========
-    Rows_Fund = Table.SelectRows(Typed, each [代码] <> "XJ"),
-    Rows_XJ   = Table.SelectRows(Typed, each [代码] = "XJ"),
-
     // 修正符号: 买入份额<0 → *-1 → 正(持仓增), 卖出份额>0 → *-1 → 负(持仓减)
-    Rows_Fund_Corrected = Table.TransformColumns(Rows_Fund, {
+    Rows_Corrected = Table.TransformColumns(Typed, {
         {"份额", each _ * -1, type number},
         {"金额", each _ * -1, type number}
     }),
 
-    // 2a. 基金份额变动
-    Fund_Share_Records = Table.SelectColumns(Rows_Fund_Corrected, {"交易时间", "代码", "份额"}),
+    // 2a. 基金份额变动记录
+    Fund_Share_Records = Table.SelectColumns(Rows_Corrected, {"交易时间", "代码", "份额"}),
 
-    // 2b. 现金变动 (买入→现金减少)
+    // 2b. 基金交易产生的现金变动 (买入→现金减少, 金额>0→变动=-金额)
     Cash_From_Fund = Table.RenameColumns(
         Table.AddColumn(
-            Table.SelectColumns(Rows_Fund_Corrected, {"交易时间", "金额"}),
+            Table.SelectColumns(Rows_Corrected, {"交易时间", "金额"}),
             "代码", each "XJ", type text
         ),
         {{"金额", "份额"}}
     ),
     Cash_Side_Final = Table.TransformColumns(Cash_From_Fund, {{"份额", each _ * -1, type number}}),
 
-    // 2c. 原始现金存取(XJ)
-    XJ_Records = Table.SelectColumns(Rows_XJ, {"交易时间", "代码", "份额"}),
-
-    // 2d. 合并 & 聚合每日变动
-    All_Changes = Table.Combine({Fund_Share_Records, Cash_Side_Final, XJ_Records}),
+    // 2c. 合并所有变动记录 & 聚合每日变动
+    All_Changes = Table.Combine({Fund_Share_Records, Cash_Side_Final}),
     Daily_Aggregated = Table.Group(All_Changes, {"交易时间", "代码"}, {
         {"DailyChange", each List.Sum([份额]), type number}
     }),
@@ -123,7 +117,12 @@ let
     FinalRenameMap = List.Transform(FundCodes, each {_ & "_MV", _}),
     Renamed_Final = Table.RenameColumns(Selected, FinalRenameMap),
 
-    // ========== 7. 排序输出 ==========
-    Sorted_Result = Table.Sort(Renamed_Final, {{"date", Order.Descending}})
+    // ========== 7. 过滤最新 7 条内含有 null 的行 (极致性能方案) ==========
+    // 使用 Table.FirstN 和 Table.Skip 拆分处理, 避开耗时的 Index 列计算
+    Sorted_Result = Table.Sort(Renamed_Final, {{"date", Order.Descending}}),
+    Top7 = Table.FirstN(Sorted_Result, 7),
+    Rest = Table.Skip(Sorted_Result, 7),
+    CleanTop7 = Table.SelectRows(Top7, each not List.Contains(Record.FieldValues(_), null)),
+    Final_Result = Table.Combine({CleanTop7, Rest})
 in
-    Sorted_Result
+    Final_Result
