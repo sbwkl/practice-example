@@ -1,10 +1,22 @@
 let
-    StockWorkbook = Excel.Workbook(File.Contents("E:\ETF 拯救世界\Market-Data-Stock.xlsx"), null, true),
-    StockSheet = StockWorkbook{[Item="Market_Data_Stock", Kind="Sheet"]}[Data],
-    MarketDataStock = Table.PromoteHeaders(StockSheet, [PromoteAllScalars=true]),
+    MarketDataStock = LoadTable("Market-Data-Stock", "Market_Data"),
+    MarketDataStockUS = LoadTable("Market-Data-Stock-US", "Market_Data"),
 
-    CodeList = {"159920", "512980", "159938", "513180", "513050", "512880", "515180", "513500", "512660", "162411"},
-    GirdStock = Table.SelectColumns(MarketDataStock, {"date"} & CodeList),
+    CodeListA = {"159920", "512980", "159938", "513180", "513050", "512880", "515180", "513500", "512660", "162411"},
+    StockA  = Table.SelectColumns(MarketDataStock, {"date"} & CodeListA),
+    CodeListUS = {"SIVR", "GLDM"},
+    StockUS = Table.SelectColumns(MarketDataStockUS, {"date"} & CodeListUS),
+    
+    AllDatesList = List.Distinct(List.Union({StockA[date], StockUS[date]})),
+    DateTable = Table.FromList(AllDatesList, Splitter.SplitByNothing(), {"date"}),
+    
+    SortedDateTable = Table.Sort(DateTable, {{"date", Order.Descending}}),
+
+    MergedStockA = Table.NestedJoin(SortedDateTable, {"date"}, StockA, {"date"}, "DataA", JoinKind.LeftOuter),
+    ExpandedStockA = Table.ExpandTableColumn(MergedStockA, "DataA", CodeListA),
+
+    MergedStockUS = Table.NestedJoin(ExpandedStockA, {"date"}, StockUS, {"date"}, "DataUS", JoinKind.LeftOuter),
+    GirdStock = Table.ExpandTableColumn(MergedStockUS, "DataUS", CodeListUS),
 
     DataTradeRaw = Excel.CurrentWorkbook(){[Name="Data_Trade"]}[Content],
     DataTrade = Table.TransformColumnTypes(DataTradeRaw, {{"买入日期", type date}, {"卖出日期", type date}}),
@@ -20,7 +32,7 @@ let
         in
             Renamed,
     Merged = List.Accumulate(
-        CodeList, 
+        CodeListA & CodeListUS, 
         GirdStock, 
         (state, current) => MergeTrade(state, current)
     ),
@@ -34,7 +46,9 @@ let
         {"515180", "红利"}, 
         {"513500", "标普"}, 
         {"512660", "军工"}, 
-        {"162411", "油气"}
+        {"162411", "油气"},
+        {"SIVR", "白银"},
+        {"GLDM", "黄金"}
     })
 in
     Final
