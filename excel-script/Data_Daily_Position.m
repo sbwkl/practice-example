@@ -95,8 +95,10 @@ let
 
     // FillDown 持仓列 (在宽表上各列独立, 不会跨品种污染)
     Filled = Table.FillDown(Expanded, HoldingsColNames),
-    // 首次交易前的日期 → 0
-    NoNulls = Table.ReplaceValue(Filled, null, 0, Replacer.ReplaceValue, HoldingsColNames),
+    // 首次交易前的日期: 基金补 0, 现金补 Initial_Capital
+    NonXJ_H_Cols = List.RemoveItems(HoldingsColNames, {"XJ_H"}),
+    NoNulls_Funds = Table.ReplaceValue(Filled, null, 0, Replacer.ReplaceValue, NonXJ_H_Cols),
+    NoNulls = Table.ReplaceValue(NoNulls_Funds, null, Initial_Capital, Replacer.ReplaceValue, {"XJ_H"}),
 
     // ========== 5. 计算每日持仓金额 = 累计份额 × 当日净值 (保留2位小数) ==========
     // List.Accumulate 逐列添加, 引擎按列批处理更高效
