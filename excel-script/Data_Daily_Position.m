@@ -98,19 +98,22 @@ let
     // 首次交易前的日期 → 0
     NoNulls = Table.ReplaceValue(Filled, null, 0, Replacer.ReplaceValue, HoldingsColNames),
 
-    // ========== 5. 计算每日持仓金额 = 累计份额 × 当日净值 ==========
+    // ========== 5. 计算每日持仓金额 = 累计份额 × 当日净值 (保留2位小数) ==========
     // List.Accumulate 逐列添加, 引擎按列批处理更高效
     WithFundMV = List.Accumulate(
         FundCodes,
         NoNulls,
         (tbl, code) => Table.AddColumn(
             tbl, code & "_MV",
-            each Record.Field(_, code) * Record.Field(_, code & "_H"),
+            each Number.Round(Record.Field(_, code) * Record.Field(_, code & "_H"), 2),
             type number
         )
     ),
-    // XJ: 净值恒为1, 市值=余额
-    WithXJ_MV = Table.RenameColumns(WithFundMV, {{"XJ_H", "XJ"}}),
+    // XJ: 净值恒为1, 市值=余额, 同样保留2位小数
+    WithXJ_MV = Table.TransformColumns(
+        Table.RenameColumns(WithFundMV, {{"XJ_H", "XJ"}}),
+        {{"XJ", each Number.Round(_, 2), type number}}
+    ),
 
     // ========== 6. 精简列: 只保留 date + 各品种市值 + XJ ==========
     FundMVCols = List.Transform(FundCodes, each _ & "_MV"),
