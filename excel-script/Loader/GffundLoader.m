@@ -8,9 +8,9 @@ let
     JsonData = Source[data],
     Data = Table.FromRecords(JsonData),
     Selected = Data[[NAVDATE], [NAVUNIT]],
-    Renamed = Table.RenameColumns(Selected, {{"NAVDATE", "date"}, {"NAVUNIT", "nav"}}),
+    Renamed = Table.RenameColumns(Selected, {{"NAVDATE", "date"}, {"NAVUNIT", "value"}}),
     TypeDate = Table.TransformColumnTypes(Renamed, {{"date", type date}}),
-    Typed = Table.TransformColumnTypes(TypeDate, {{"nav", type number}}),
+    Typed = Table.TransformColumnTypes(TypeDate, {{"value", type number}}),
     Final = Table.Sort(Typed,{{"date", Order.Descending}})
 in
     Final

@@ -5,9 +5,9 @@ let
     JsonList = JsonData[list],
     Data = Table.FromRecords(JsonList),
     Selected = Data[[date], [netValue]],
-    Renamed = Table.RenameColumns(Selected, {"netValue", "nav"}),
+    Renamed = Table.RenameColumns(Selected, {"netValue", "value"}),
     TypeDate = Table.TransformColumnTypes(Renamed, {{"date", type date}}),
-    TypeNav = Table.TransformColumnTypes(TypeDate, {{"nav", type number}}),
+    TypeNav = Table.TransformColumnTypes(TypeDate, {{"value", type number}}),
     Final = Table.Sort(TypeNav,{{"date", Order.Descending}})
 in
     Final

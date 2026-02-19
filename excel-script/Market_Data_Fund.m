@@ -1,17 +1,16 @@
 let
-    Source = Excel.CurrentWorkbook(){[Name="Data_Fund"]}[Content],
+    Source = Excel.CurrentWorkbook(){[Name="Data_Symbol"]}[Content],
     FilteredRows = Table.SelectRows(Source, each ([LoaderName] <> null and [LoaderName] <> "")),
 
-    GetTables = Table.AddColumn(FilteredRows, "FundData", each 
+    GetTables = Table.AddColumn(FilteredRows, "MarketData", each 
         let
             Func = Record.Field(#shared, [LoaderName]),
-            RawTable = Func([代码]),
-            Standardized = Table.RenameColumns(RawTable, {{"nav", "value"}})
+            RawTable = Func([程序代码])
         in
-            Standardized
+            RawTable
     ),
 
-    ExpandDateValue = Table.ExpandTableColumn(GetTables, "FundData", {"date", "value"}),
+    ExpandDateValue = Table.ExpandTableColumn(GetTables, "MarketData", {"date", "value"}),
     CombinedLongTable = Table.SelectColumns(ExpandDateValue, {"代码", "date", "value"}),
 
     PivotedTable = Table.Pivot(
