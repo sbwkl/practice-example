@@ -18,6 +18,7 @@ let
         {"date", type date}, 
         {"close", type number}
     }),
-    Final = Table.Sort(FinalTable, {"date", Order.Descending})
+    RenameColumnName = Table.RenameColumns(FinalTable, {"close", "value"}),
+    Final = Table.Sort(RenameColumnName, {"date", Order.Descending})
 in
     Final
