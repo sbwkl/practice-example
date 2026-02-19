@@ -1,6 +1,7 @@
 let
-    Source = Excel.CurrentWorkbook(){[Name="Data_Index"]}[Content],
-    FilteredRows = Table.SelectRows(Source, each ([LoaderName] <> null and [LoaderName] <> "")),
+    Source = Excel.CurrentWorkbook(){[Name="Data_Symbol"]}[Content],
+    ChangeType = Table.TransformColumnTypes(Source, {{"代码", type text}, {"程序代码", type text}}),
+    FilteredRows = Table.SelectRows(ChangeType, each ([LoaderName] <> null and [LoaderName] <> "")),
     
     // 为了性能优化，先将表转换为记录列表，避免循环中频繁进行索引寻址
     Records = Table.ToRecords(FilteredRows),
@@ -10,10 +11,9 @@ let
         let
             Current = Records{index},
             Func = Record.Field(#shared, Current[LoaderName]),
-            RawTable = Function.InvokeAfter(() => Func(Current[代码]), #duration(0, 0, 0, 5)),
-            Standardized = Table.RenameColumns(RawTable, {{"point", "value"}})
+            RawTable = Function.InvokeAfter(() => Func(Current[程序代码]), #duration(0, 0, 0, 10))
         in
-            Standardized,
+            RawTable,
 
     // 使用 List.Generate 强制串行执行
     GeneratedList = List.Generate(
