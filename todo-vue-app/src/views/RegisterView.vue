@@ -24,7 +24,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '../services/api';
+import todoService from '../services/todoService';
 
 const username = ref('');
 const password = ref('');
@@ -37,7 +37,7 @@ const handleRegister = async () => {
   loading.value = true;
   error.value = '';
   try {
-    await api.register({ username: username.value, password: password.value });
+    await todoService.register({ username: username.value, password: password.value });
     router.push('/login');
   } catch (err) {
     error.value = 'Registration failed. Please try again.';

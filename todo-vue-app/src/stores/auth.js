@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import api from '../services/api';
+import todoService from '../services/todoService';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -12,7 +12,7 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         async login(username, password) {
             try {
-                const response = await api.login({ username, password });
+                const response = await todoService.login({ username, password });
                 this.token = response.data.token;
                 // Decode token or fetch user details if needed. For now, just storing username.
                 this.user = { username };
@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', {
                 localStorage.setItem('user', JSON.stringify(this.user));
 
                 // Update axios headers
-                api.setAuthToken(this.token);
+                todoService.setAuthToken(this.token);
 
                 return true;
             } catch (error) {
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore('auth', {
             this.user = null;
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            api.setAuthToken(null);
+            todoService.setAuthToken(null);
         }
     }
 });

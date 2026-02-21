@@ -9,6 +9,7 @@ A modern Todo List application built with [Vue 3](https://vuejs.org/) and [Vite]
 - **Edit Todo**: Double-click to edit existing items.
 - **Delete Todo**: Remove items from the list.
 - **Toggle Status**: Mark items as completed or pending.
+- **Dual Storage Mode**: Switch between Remote API and Local Storage (LocalStorage) when the backend is unavailable.
 
 ## Project Structure
 
@@ -20,7 +21,9 @@ todo-frontend/
 │   ├── components/      # Vue components
 │   │   └── Todo.vue     # Main Todo list component
 │   ├── services/        # API services
-│   │   └── api.js       # Axios configuration and API endpoints
+│   │   ├── api.js           # Axios configuration and API endpoints
+│   │   ├── localService.js  # LocalStorage implementation
+│   │   └── todoService.js   # Proxy service for switching modes
 │   ├── App.vue          # Root component
 │   ├── main.js          # Application entry point
 │   └── style.css        # Global styles
@@ -79,6 +82,14 @@ npm run preview
 ```
 
 ## Configuration
+
+### Storage Mode
+
+The application supports two storage modes:
+- **Remote**: Connects to the backend API (default).
+- **Local**: Uses the browser's `localStorage`.
+
+You can switch between these modes using the "Switch" button in the Todo List interface. The application also checks for API availability on startup and displays a warning if the backend is unreachable.
 
 ### API Configuration
 

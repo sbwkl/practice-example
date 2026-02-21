@@ -2,6 +2,15 @@
   <div id="todo-app">
     <div class="container">
       <h1>Todo List</h1>
+      
+      <div class="storage-config">
+        <span>Storage: <strong>{{ currentMode }}</strong></span>
+        <button @click="toggleMode" class="switch-btn">
+          Switch to {{ currentMode === 'remote' ? 'Local' : 'Remote' }}
+        </button>
+        <span v-if="apiUnavailable" class="warning"> (API Unavailable)</span>
+      </div>
+
       <div class="input-group">
         <input type="text" v-model="newTodo.title" @keyup.enter="addTodo" placeholder="Add a new todo...">
         <button @click="addTodo">Add</button>
@@ -21,7 +30,7 @@
 </template>
 
 <script>
-import api from '../services/api';
+import todoService, { MODES } from '../services/todoService';
 
 export default {
   data() {
@@ -29,16 +38,22 @@ export default {
       todos: [],
       newTodo: {
         title: ''
-      }
+      },
+      currentMode: todoService.currentMode,
+      apiUnavailable: false
     };
   },
-  created() {
+  async created() {
+    if (this.currentMode === MODES.REMOTE) {
+      const isAvailable = await todoService.checkApiAvailability();
+      this.apiUnavailable = !isAvailable;
+    }
     this.fetchTodos();
   },
   methods: {
     async fetchTodos() {
       try {
-        const response = await api.getTodos();
+        const response = await todoService.getTodos();
         this.todos = response.data.map(todo => ({ ...todo, editing: false }));
       } catch (error) {
         console.error('Error fetching todos:', error);
@@ -52,7 +67,7 @@ export default {
               description: " ",
               status: 'PENDING',
           };
-          const response = await api.createTodo(newTodoData);
+          const response = await todoService.createTodo(newTodoData);
           this.todos.push({ ...response.data, editing: false });
           this.newTodo.title = '';
         } catch (error) {
@@ -62,7 +77,7 @@ export default {
     },
     async deleteTodo(id) {
       try {
-        await api.deleteTodo(id);
+        await todoService.deleteTodo(id);
         this.todos = this.todos.filter(todo => todo.id !== id);
       } catch (error) {
         console.error('Error deleting todo:', error);
@@ -72,7 +87,7 @@ export default {
       const newStatus = todo.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
       try {
         const updatedTodo = { ...todo, status: newStatus };
-        await api.updateTodo(todo.id, updatedTodo);
+        await todoService.updateTodo(todo.id, updatedTodo);
         todo.status = newStatus;
       } catch (error) {
         console.error('Error updating todo status:', error);
@@ -91,12 +106,16 @@ export default {
       if (!todo.editing) return;
       todo.editing = false;
       try {
-        await api.updateTodo(todo.id, { title: todo.title, description: todo.description, status: todo.status });
+        await todoService.updateTodo(todo.id, { title: todo.title, description: todo.description, status: todo.status });
       } catch (error) {
         console.error('Error updating todo:', error);
         // Optionally revert the change in the UI
         this.fetchTodos();
       }
+    },
+    toggleMode() {
+      const newMode = this.currentMode === MODES.REMOTE ? MODES.LOCAL : MODES.REMOTE;
+      todoService.setMode(newMode);
     }
   }
 };
@@ -109,6 +128,30 @@ export default {
   padding: 20px;
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   color: #333;
+}
+
+.storage-config {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.switch-btn {
+  padding: 5px 10px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.warning {
+  color: #e74c3c;
+  font-weight: bold;
 }
 
 h1 {
