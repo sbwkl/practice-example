@@ -4,8 +4,7 @@ let
     DataSymbol = Table.Combine({SymbolA, SymbolUS}),
     Workbook = Excel.CurrentWorkbook(),
     DataTrade = Workbook{[Name="Data_Trade"]}[Content],
-    DataFootprint = Workbook{[Name="Data_Footprint"]}[Content],
-    Renamed = Table.RenameColumns(DataFootprint, {
+    Renamed = Table.RenameColumns(Data_Footprint, {
         // {"恒生", "恒生 ETF"}, 
         // {"传媒", "传媒 ETF"}, 
         // {"医药", "医药卫生 ETF"}, 
