@@ -46,11 +46,19 @@ let
             Value, 
         type number
     ),
-    AddHold = Table.AddColumn(AddLatestNav, "持有金额", each ([网格份额] + [留利润]) * [最新净值]),
-    AddPL = Table.AddColumn(AddHold, "累计收益", each [买入金额] + [卖出金额] + [持有金额]),
-    AddName = Table.NestedJoin(AddPL, "代码", DataSymbol, "代码", "SymbolData", JoinKind.LeftOuter),
+    AddCalculated = Table.FromRecords(Table.TransformRows(AddLatestNav, (r) => 
+        let
+            持有金额   = (r[网格份额] + r[留利润]) * r[最新净值],
+            净投入     = -(r[买入金额] + r[卖出金额]),
+            累计投入   = -r[买入金额],
+            累计收益   = r[买入金额] + r[卖出金额] + 持有金额,
+            累计收益率 = if 累计投入 <> 0 then 累计收益 / 累计投入 else 0
+        in
+            Record.Combine({r, [持有金额=持有金额, 净投入=净投入, 累计投入=累计投入, 累计收益=累计收益, 累计收益率=累计收益率]})
+    )),
+    AddName = Table.NestedJoin(AddCalculated, "代码", DataSymbol, "代码", "SymbolData", JoinKind.LeftOuter),
     ExpandName = Table.ExpandTableColumn(AddName, "SymbolData", {"名称"}),
-    Selected = Table.SelectColumns(ExpandName, {"代码", "名称", "网格份额", "留利润", "最新净值", "持有金额", "结利", "累计收益"}),
+    Selected = Table.SelectColumns(ExpandName, {"代码", "名称", "网格份额", "留利润", "最新净值", "持有金额", "结利", "净投入", "累计投入", "累计收益", "累计收益率"}),
     Final = Table.TransformColumnTypes(Selected, {{"代码", type text}})
 in
     Final
